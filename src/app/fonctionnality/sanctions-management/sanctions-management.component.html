@@ -1,0 +1,86 @@
+<div class="container mt-4">
+  <h2>Gestion des Sanctions</h2>
+
+  <!-- Enregistrer une sanction -->
+  <button class="btn btn-primary mb-3" (click)="openSanctionForm(0)">Enregistrer une sanction</button>
+
+  <!-- Formulaire d'enregistrement de sanction -->
+  <div *ngIf="showSanctionForm" class="card mb-3">
+    <div class="card-body">
+      <h5 class="card-title">Enregistrer une nouvelle sanction</h5>
+      <form (ngSubmit)="saveSanction()">
+        <div class="mb-3">
+          <label for="memberName" class="form-label">Nom du membre</label>
+          <input type="text" class="form-control" id="memberName" [(ngModel)]="newSanction!.memberName" name="memberName" required>
+        </div>
+        <div class="mb-3">
+          <label for="reason" class="form-label">Motif de la sanction</label>
+          <input type="text" class="form-control" id="reason" [(ngModel)]="newSanction!.reason" name="reason" required>
+        </div>
+        <div class="mb-3">
+          <label for="amount" class="form-label">Montant</label>
+          <input type="number" class="form-control" id="amount" [(ngModel)]="newSanction!.amount" name="amount" required>
+        </div>
+        <div class="mb-3">
+          <label for="date" class="form-label">Date</label>
+          <input type="date" class="form-control" id="date" [(ngModel)]="newSanction!.date" name="date" required>
+        </div>
+        <button type="submit" class="btn btn-success">Enregistrer</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Liste des sanctions -->
+  <h3>Historique des sanctions</h3>
+  <table class="table">
+    <thead>
+    <tr>
+      <th>Date</th>
+      <th>Membre</th>
+      <th>Motif</th>
+      <th>Montant</th>
+      <th>Statut</th>
+      <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr *ngFor="let sanction of sanctions">
+      <td>{{ sanction.date | date:'dd/MM/yyyy' }}</td>
+      <td>{{ sanction.memberName }}</td>
+      <td>{{ sanction.reason }}</td>
+      <td>{{ sanction.amount | currency:'XAF':'symbol':'1.0-0' }}</td>
+      <td>
+          <span [class]="sanction.isPaid ? 'badge bg-success' : 'badge bg-danger'">
+            {{ sanction.isPaid ? 'Payée' : 'Non payée' }}
+          </span>
+      </td>
+      <td>
+        <button class="btn btn-sm btn-info" (click)="togglePaymentStatus(sanction)">
+          {{ sanction.isPaid ? 'Marquer comme non payée' : 'Marquer comme payée' }}
+        </button>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+
+  <!-- Rapport financier des sanctions -->
+  <div class="card mt-4">
+    <div class="card-body">
+      <h5 class="card-title">Rapport financier des sanctions</h5>
+      <ul class="list-group">
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          Total des sanctions
+          <span class="badge bg-primary rounded-pill">{{ getTotalSanctionsAmount() | currency:'XAF':'symbol':'1.0-0' }}</span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          Sanctions payées
+          <span class="badge bg-success rounded-pill">{{ getPaidSanctionsAmount() | currency:'XAF':'symbol':'1.0-0' }}</span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          Sanctions non payées
+          <span class="badge bg-danger rounded-pill">{{ getUnpaidSanctionsAmount() | currency:'XAF':'symbol':'1.0-0' }}</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>

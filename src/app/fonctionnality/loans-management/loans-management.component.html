@@ -1,0 +1,94 @@
+<div class="container mt-4">
+  <h2>Gestion des Prêts</h2>
+
+  <!-- Enregistrer un emprunt -->
+  <button class="btn btn-primary mb-3" (click)="registerLoan()">Enregistrer un emprunt</button>
+
+  <!-- Formulaire d'enregistrement d'emprunt -->
+  <div *ngIf="showLoanForm" class="card mb-3">
+    <div class="card-body">
+      <h5 class="card-title">Enregistrer un nouvel emprunt</h5>
+      <form (ngSubmit)="saveLoan()">
+        <div class="mb-3">
+          <label for="memberId" class="form-label">Membre</label>
+          <select class="form-select" id="memberId" [(ngModel)]="newLoan!.memberId" name="memberId" required>
+            <option *ngFor="let saver of eligibleSavers" [value]="saver.id">
+              {{ saver.name }} (Éligible : {{ saver.eligibleAmount | currency:'XAF' }})
+            </option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label for="amount" class="form-label">Montant</label>
+          <input type="number" class="form-control" id="amount" [(ngModel)]="newLoan!.amount" name="amount" required>
+        </div>
+        <div class="mb-3">
+          <label for="interestRate" class="form-label">Taux d'intérêt (%)</label>
+          <input type="number" class="form-control" id="interestRate" [(ngModel)]="newLoan!.interestRate" name="interestRate" required>
+        </div>
+        <div class="mb-3">
+          <label for="startDate" class="form-label">Date de début</label>
+          <input type="date" class="form-control" id="startDate" [(ngModel)]="newLoan!.startDate" name="startDate" required>
+        </div>
+        <div class="mb-3">
+          <label for="endDate" class="form-label">Date de fin</label>
+          <input type="date" class="form-control" id="endDate" [(ngModel)]="newLoan!.endDate" name="endDate" required>
+        </div>
+        <button type="submit" class="btn btn-success">Enregistrer</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Liste des prêts -->
+  <h3>Historique des prêts</h3>
+  <table class="table">
+    <thead>
+    <tr>
+      <th>ID</th>
+      <th>Membre</th>
+      <th>Montant</th>
+      <th>Taux d'intérêt</th>
+      <th>Date de début</th>
+      <th>Date de fin</th>
+      <th>Statut</th>
+      <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr *ngFor="let loan of loans">
+      <td>{{ loan.id }}</td>
+      <td>{{ loan.memberName }}</td>
+      <td>{{ loan.amount | currency:'XAF' }}</td>
+      <td>{{ loan.interestRate }}%</td>
+      <td>{{ loan.startDate | date:'dd/MM/yyyy' }}</td>
+      <td>{{ loan.endDate | date:'dd/MM/yyyy' }}</td>
+      <td>{{ loan.status }}</td>
+      <td>
+        <button class="btn btn-sm btn-info me-2" (click)="recordPayment(loan.id)">Enregistrer remboursement</button>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+
+  <!-- Formulaire de remboursement -->
+  <div *ngIf="showPaymentForm" class="card mt-3">
+    <div class="card-body">
+      <h5 class="card-title">Enregistrer un remboursement</h5>
+      <form (ngSubmit)="savePayment()">
+        <div class="mb-3">
+          <label for="paymentAmount" class="form-label">Montant</label>
+          <input type="number" class="form-control" id="paymentAmount" [(ngModel)]="newPayment.amount" name="amount" required>
+        </div>
+        <div class="mb-3">
+          <label for="paymentDate" class="form-label">Date</label>
+          <input type="date" class="form-control" id="paymentDate" [(ngModel)]="newPayment.date" name="date" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Enregistrer le remboursement</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Boutons pour les rapports -->
+  <div class="mt-4">
+    <button class="btn btn-secondary" (click)="generateLoanReport()">Générer un rapport sur les prêts</button>
+  </div>
+</div>

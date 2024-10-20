@@ -1,0 +1,233 @@
+<div class="container-fluid">
+  <!-- En-tête avec actions principales -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <h4 class="card-title mb-0">Gestion des Membres</h4>
+            <div class="d-flex gap-2">
+              <button class="btn btn-primary" (click)="addMember()">
+                <i class="bi bi-plus-circle me-2"></i>Nouveau Membre
+              </button>
+              <button class="btn btn-outline-primary" (click)="generateMembersList()">
+                <i class="bi bi-file-earmark-text me-2"></i>Générer Liste
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtres et recherche -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <ul class="nav nav-pills">
+              <li class="nav-item">
+                <a class="nav-link" [class.active]="currentTab === 'active'" (click)="currentTab = 'active'">
+                  Membres Actifs
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" [class.active]="currentTab === 'excluded'" (click)="currentTab = 'excluded'">
+                  Membres Exclus
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" [class.active]="currentTab === 'all'" (click)="currentTab = 'all'">
+                  Tous les Membres
+                </a>
+              </li>
+            </ul>
+            <div class="d-flex gap-2">
+              <input type="text" class="form-control" placeholder="Rechercher un membre..."
+                     [(ngModel)]="searchTerm">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Liste des membres -->
+  <div class="row" *ngIf="!isAddingMember && !isEditingMember && !showMemberDetails">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nom</th>
+                <th>Prénom</th>
+                <th>Profession</th>
+                <th>Téléphone</th>
+                <th>Statut</th>
+                <th>Actions</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr *ngFor="let member of members">
+                <td>{{ member.id }}</td>
+                <td>{{ member.lastName }}</td>
+                <td>{{ member.firstName }}</td>
+                <td>{{ member.profession }}</td>
+                <td>{{ member.phoneGabon }}</td>
+                <td>
+                    <span [class]="'badge ' + (member.status === 'active' ? 'bg-success' : 'bg-danger')">
+                      {{ member.status === 'active' ? 'Actif' : 'Exclu' }}
+                    </span>
+                </td>
+                <td>
+                  <div class="btn-group">
+                    <button class="btn btn-sm btn-outline-primary" (click)="viewMemberDetails(member)">
+                      <i class="bi bi-eye"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" (click)="editMember(member)">
+                      <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="btn btn-sm"
+                            [class.btn-outline-danger]="member.status === 'active'"
+                            [class.btn-outline-success]="member.status === 'excluded'"
+                            (click)="member.status === 'active' ? excludeMember(member) : reintegrateMember(member)">
+                      <i class="bi" [class.bi-person-x]="member.status === 'active'"
+                         [class.bi-person-check]="member.status === 'excluded'"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulaire d'ajout/modification -->
+  <div class="row" *ngIf="isAddingMember || isEditingMember">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title mb-0">
+            {{ isAddingMember ? 'Nouveau Membre' : 'Modifier le Membre' }}
+          </h5>
+        </div>
+        <div class="card-body">
+          <form (ngSubmit)="saveMember()" #memberForm="ngForm">
+            <!-- Informations Personnelles -->
+            <div class="row mb-4">
+              <h6 class="mb-3">Informations Personnelles</h6>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Nom</label>
+                <input type="text" class="form-control" [(ngModel)]="newMember.lastName" name="lastName" required>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Prénom</label>
+                <input type="text" class="form-control" [(ngModel)]="newMember.firstName" name="firstName" required>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Date de naissance</label>
+                <input type="date" class="form-control" [(ngModel)]="newMember.birthDate" name="birthDate" required>
+              </div>
+              <!-- Autres champs personnels -->
+            </div>
+
+            <!-- Informations de Contact -->
+            <div class="row mb-4">
+              <h6 class="mb-3">Informations de Contact</h6>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Téléphone au Gabon</label>
+                <input type="tel" class="form-control" [(ngModel)]="newMember.phoneGabon" name="phoneGabon">
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Boîte Postale</label>
+                <input type="text" class="form-control" [(ngModel)]="newMember.poBox" name="poBox">
+              </div>
+              <!-- Autres champs de contact -->
+            </div>
+
+            <!-- Informations Familiales -->
+            <div class="row mb-4">
+              <h6 class="mb-3">Informations Familiales</h6>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Nom du Père</label>
+                <input type="text" class="form-control" [(ngModel)]="newMember.fatherName" name="fatherName">
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Nom de la Mère</label>
+                <input type="text" class="form-control" [(ngModel)]="newMember.motherName" name="motherName">
+              </div>
+              <!-- Autres champs familiaux -->
+            </div>
+
+            <!-- Autres Informations -->
+            <div class="row mb-4">
+              <h6 class="mb-3">Autres Informations</h6>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Groupe Sanguin</label>
+                <select class="form-select" [(ngModel)]="newMember.bloodGroup" name="bloodGroup">
+                  <option value="">Sélectionner</option>
+                  <option value="A+">A+</option>
+                  <option value="A-">A-</option>
+                  <option value="B+">B+</option>
+                  <option value="B-">B-</option>
+                  <option value="AB+">AB+</option>
+                  <option value="AB-">AB-</option>
+                  <option value="O+">O+</option>
+                  <option value="O-">O-</option>
+                </select>
+              </div>
+              <!-- Autres champs -->
+            </div>
+
+            <div class="d-flex justify-content-end gap-2">
+              <button type="button" class="btn btn-secondary" (click)="resetForm()">Annuler</button>
+              <button type="submit" class="btn btn-primary" [disabled]="!memberForm.form.valid">
+                {{ isAddingMember ? 'Ajouter' : 'Enregistrer' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Détails du membre -->
+  <div class="row" *ngIf="showMemberDetails && selectedMember">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">Détails du Membre</h5>
+            <button class="btn btn-secondary" (click)="showMemberDetails = false">Fermer</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6">
+              <p><strong>Nom:</strong> {{ selectedMember.lastName }}</p>
+              <p><strong>Prénom:</strong> {{ selectedMember.firstName }}</p>
+              <p><strong>Date de naissance:</strong> {{ selectedMember.birthDate }}</p>
+              <p><strong>Profession:</strong> {{ selectedMember.profession }}</p>
+              <p><strong>Téléphone:</strong> {{ selectedMember.phoneGabon }}</p>
+              <p><strong>Boîte Postale:</strong> {{ selectedMember.poBox }}</p>
+            </div>
+            <div class="col-md-6">
+              <p><strong>Nom du Père:</strong> {{ selectedMember.fatherName }}</p>
+              <p><strong>Nom de la Mère:</strong> {{ selectedMember.motherName }}</p>
+              <p><strong>Groupe Sanguin:</strong> {{ selectedMember.bloodGroup }}</p>
+              <p><strong>Année d'adhésion:</strong> {{ selectedMember.joinDate }}</p>
+              <p><strong>Statut:</strong> {{ selectedMember.status === 'active' ? 'Actif' : 'Exclu' }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

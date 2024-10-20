@@ -1,0 +1,55 @@
+<div class="login-container">
+  <div class="header">
+    <div class="welcome-section">
+      <!-- Logo principal déplacé au-dessus du texte -->
+      <img src="assets/images/Bienvenu.png" alt="Logo" class="main-logo">
+      <div class="logo-text">
+        <p class="association-text">DE L'ASSOCIATION <span>CEVIMEC</span></p>
+        <p class="subtitle">abrégé de <span>"Cercles des Visiteurs</span></p>
+        <p class="subtitle"><span>Medicaux Camerounais en abrégé"</span></p>
+      </div>
+    </div>
+    <div class="circle-logo-container">
+      <div class="small-logo-circle">
+        <img src="assets/logos/logo_cevimec.png" alt="Circle Logo" class="circle-logo">
+      </div>
+    </div>
+  </div>
+
+  <div class="login-box">
+    <h2>CONNEXION</h2>
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+      <div class="form-group">
+        <label for="username">Nom d'utilisateur</label>
+        <input
+          type="text"
+          id="username"
+          formControlName="username"
+          placeholder="Entrez votre nom"
+          [class.is-invalid]="loginForm.get('username')?.invalid && loginForm.get('username')?.touched">
+        <div *ngIf="loginForm.get('username')?.invalid && loginForm.get('username')?.touched" class="text-danger">
+          Le nom d'utilisateur est requis.
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Mot de passe</label>
+        <input
+          type="password"
+          id="password"
+          formControlName="password"
+          placeholder="Entrez votre mot de passe">
+      </div>
+
+      <button type="submit" class="submit-btn">Se connecter</button>
+
+      <div class="forgot-password">
+        <a href="#">Mot de passe oublié?</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="footer">
+  © Copyright Août-2024. Tous droits réservés.
+</div>

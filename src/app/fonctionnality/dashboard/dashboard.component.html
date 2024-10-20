@@ -1,0 +1,178 @@
+<div class="dashboard-container">
+  <!-- Navigation des sections -->
+  <div class="section-nav mb-4">
+    <div class="d-flex flex-wrap gap-2">
+      <ng-container *ngFor="let section of sections">
+        <button *ngIf="hasAccess(section.id)"
+                class="btn"
+                [class.btn-primary]="currentSection === section.id"
+                [class.btn-outline-primary]="currentSection !== section.id"
+                (click)="setCurrentSection(section.id)">
+          {{ section.title }}
+        </button>
+      </ng-container>
+    </div>
+  </div>
+
+  <!-- Contenu principal -->
+  <div class="dashboard-content">
+    <!-- Indicateurs de l'association -->
+    <div *ngIf="currentSection === 'indicators'" class="fade-in">
+      <div class="row g-4">
+        <div *ngFor="let indicator of indicators" class="col-md-6 col-lg-3">
+          <div class="card h-100">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <h6 class="card-subtitle mb-2 text-muted">{{ indicator.title }}</h6>
+                  <h4 class="card-title mb-0">{{ indicator.value }}</h4>
+                </div>
+                <div [class]="'icon-box bg-' + indicator.color + '-subtle'">
+                  <i [class]="'bi ' + indicator.icon + ' text-' + indicator.color"></i>
+                </div>
+              </div>
+              <div class="mt-3" *ngIf="indicator.trend !== undefined">
+                <span [class]="'badge ' + (indicator.trend > 0 ? 'text-success' : 'text-danger')">
+                  <i [class]="'bi ' + (indicator.trend > 0 ? 'bi-arrow-up' : 'bi-arrow-down')"></i>
+                  {{ Math.abs(indicator.trend) }}%
+                </span>
+                <span class="ms-2 text-muted">depuis le mois dernier</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Statistiques -->
+    <div *ngIf="currentSection === 'statistics'" class="fade-in">
+      <div class="row">
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Répartition des Membres</h5>
+              <div style="height: 300px;">
+                <ngx-charts-pie-chart
+                  [results]="[
+                    { name: 'Hommes', value: 85 },
+                    { name: 'Femmes', value: 60 }
+                  ]"
+                  [gradient]="true"
+                  [legend]="true">
+                </ngx-charts-pie-chart>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">État des Prêts</h5>
+              <div style="height: 300px;">
+                <ngx-charts-bar-vertical
+                  [results]="[
+                    { name: 'En cours', value: 15 },
+                    { name: 'Remboursés', value: 25 },
+                    { name: 'En retard', value: 3 }
+                  ]"
+                  [gradient]="true">
+                </ngx-charts-bar-vertical>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Évolution des effectifs -->
+    <div *ngIf="currentSection === 'memberEvolution'" class="fade-in">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Évolution des Effectifs (2020-2024)</h5>
+          <div style="height: 400px;">
+            <ngx-charts-line-chart
+              [results]="[{
+                name: 'Membres',
+                series: memberEvolutionData
+              }]"
+              [gradient]="true"
+              [xAxis]="true"
+              [yAxis]="true"
+              [showXAxisLabel]="true"
+              [showYAxisLabel]="true"
+              xAxisLabel="Année"
+              yAxisLabel="Nombre de membres">
+            </ngx-charts-line-chart>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Évolution de la caisse -->
+    <div *ngIf="currentSection === 'cashEvolution'" class="fade-in">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Évolution du Montant de la Caisse</h5>
+          <div style="height: 400px;">
+            <ngx-charts-area-chart
+              [results]="[{
+                name: 'Montant',
+                series: cashEvolutionData
+              }]"
+              [gradient]="true"
+              [xAxis]="true"
+              [yAxis]="true"
+              [showXAxisLabel]="true"
+              [showYAxisLabel]="true"
+              xAxisLabel="Mois"
+              yAxisLabel="Montant (FCFA)">
+            </ngx-charts-area-chart>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Évolution de la banque -->
+    <div *ngIf="currentSection === 'bankEvolution'" class="fade-in">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">État des Comptes Bancaires</h5>
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+              <tr>
+                <th>Banque</th>
+                <th>Numéro de Compte</th>
+                <th>Solde Actuel</th>
+                <th>Évolution</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr>
+                <td>UBA</td>
+                <td>CM21 **** **** 1234</td>
+                <td>1,500,000 FCFA</td>
+                <td>
+                    <span class="badge text-success">
+                      <i class="bi bi-arrow-up"></i> 5.2%
+                    </span>
+                </td>
+              </tr>
+              <tr>
+                <td>BICEC</td>
+                <td>CM45 **** **** 5678</td>
+                <td>800,000 FCFA</td>
+                <td>
+                    <span class="badge text-danger">
+                      <i class="bi bi-arrow-down"></i> 2.1%
+                    </span>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

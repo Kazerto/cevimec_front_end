@@ -1,0 +1,228 @@
+
+.login-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: white;
+  padding: 20px;
+}
+
+.header {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  margin-bottom: 40px;
+  position: relative;
+  gap: 40px; /* Espace entre le logo et le texte */
+}
+
+/* Container pour le logo principal */
+.logo-container {
+  flex-shrink: 0;
+}
+
+/* Cercle autour du logo principal */
+.logo-circle {
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  background-color: white;
+  border: 2px solid #ff69b4; /* Bordure rose */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Ombre légère */
+}
+
+/* Style du logo principal */
+.main-logo {
+  width: 70%;
+  height: auto;
+  object-fit: contain;
+}
+
+.welcome-section {
+  text-align: left; /* Alignement du texte à gauche */
+  padding-left: 40px; /* Décalage supplémentaire vers la droite */
+}
+
+
+.circle-logo {
+  width: 100px;
+  height: auto;
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.welcome-section h1 {
+  font-size: 32px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.association-text {
+  margin: 5px 0;
+  font-size: 25px;
+}
+
+.association-text span {
+  color: #ff69b4;
+}
+
+.subtitle {
+  font-size: 25px;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.subtitle span {
+  color: #ff69b4;
+}
+
+.logo-text {
+  width: 100%;
+  font-size: 35px;
+  text-align: left;
+  padding-left: 600px; /* Décalage vers la droite */
+}
+
+/* Container pour le circle-logo */
+.circle-logo-container {
+  position: relative;
+}
+
+/* Cercle autour du circle-logo */
+.small-logo-circle {
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  background-color: white;
+  border: 2px solid #020202;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.circle-logo {
+  width: 80%;
+  height: auto;
+  object-fit: contain;
+}
+
+.login-box {
+  background-color: #f5f5f5;
+  border-radius: 10px;
+  padding: 30px;
+  max-width: 500px;
+  margin: 0 auto;
+  width: 120%;
+  box-shadow: 0 0 15px rgba(9, 9, 9, 0.5);
+}
+
+.login-box:hover {
+  background-color: #007bff;
+  color: white;
+}
+
+.login-box h2 {
+  text-align: center;
+  margin-bottom: 30px;
+  font-weight: bold;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 14px;
+}
+
+input::placeholder {
+  color: #999;
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 12px;
+  background-color: #dedede;
+  color: black;
+  border: black solid 1px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 500;
+  margin-top: 20px;
+}
+
+.submit-btn:hover {
+  background-color: #666666;
+}
+
+.forgot-password {
+  text-align: left;
+  margin-top: 15px;
+
+}
+
+.forgot-password a {
+  color: #ff69b4;
+  text-decoration: underline;
+}
+
+.footer {
+  text-align: center;
+  margin-top: auto;
+  padding: 20px 0;
+  font-size: 12px;
+  background: #373737;
+  color: white;
+}
+
+/* Ajout de media queries pour la responsivité */
+@media (max-width: 1024px) {
+  .header {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .logo-circle {
+    width: 200px;
+    height: 200px;
+  }
+
+  .welcome-section {
+    text-align: center;
+    padding-left: 0;
+  }
+
+  .circle-logo {
+    position: static;
+    transform: none;
+    margin-top: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .logo-circle {
+    width: 150px;
+    height: 150px;
+  }
+
+  .welcome-section h1 {
+    font-size: 24px;
+  }
+}

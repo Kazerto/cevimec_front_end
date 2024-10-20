@@ -1,0 +1,65 @@
+<div class="container mt-4">
+  <h2 class="mb-4">Gestion des Aides</h2>
+
+  <!-- Formulaire d'enregistrement d'aide -->
+  <div class="card mb-4">
+    <div class="card-header">
+      Enregistrer une aide
+    </div>
+    <div class="card-body">
+      <form>
+        <div class="mb-3">
+          <label for="aideType" class="form-label">Type d'aide</label>
+          <select class="form-select" id="aideType" required>
+            <option value="">Choisir un type d'aide</option>
+            <option value="mariage">Mariage</option>
+            <option value="deces">Décès</option>
+            <option value="naissance">Naissance</option>
+            <option value="maladie">Maladie</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label for="membre" class="form-label">Membre bénéficiaire</label>
+          <input type="text" class="form-control" id="membre" required>
+        </div>
+        <div class="mb-3">
+          <label for="montant" class="form-label">Montant</label>
+          <input type="number" class="form-control" id="montant" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Historique des aides -->
+  <div class="card mb-4">
+    <div class="card-header">
+      Historique des aides
+    </div>
+    <div class="card-body">
+      <table class="table table-striped">
+        <thead>
+        <tr>
+          <th>Date</th>
+          <th>Type</th>
+          <th>Membre</th>
+          <th>Montant</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!-- Les données seront insérées ici dynamiquement -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Boutons pour les rapports et la liste des membres éligibles -->
+  <div class="row">
+    <div class="col-md-6 mb-3">
+      <button class="btn btn-success w-100">Générer un rapport des aides</button>
+    </div>
+    <div class="col-md-6 mb-3">
+      <button class="btn btn-info w-100">Visualiser la liste des membres éligibles</button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,73 @@
+<div class="container mt-4">
+  <h2>Gestion des Sessions</h2>
+
+  <!-- Planifier une session -->
+  <button class="btn btn-primary mb-3" (click)="planSession()">Planifier une session</button>
+
+  <!-- Formulaire de planification de session -->
+  <div *ngIf="showSessionForm" class="card mb-3">
+    <div class="card-body">
+      <h5 class="card-title">Planifier une nouvelle session</h5>
+      <form (ngSubmit)="saveSession()">
+        <div class="mb-3">
+          <label for="sessionDate" class="form-label">Date</label>
+          <input type="date" class="form-control" id="sessionDate" [(ngModel)]="newSession!.date" name="date" required>
+        </div>
+        <div class="mb-3">
+          <label for="sessionType" class="form-label">Type</label>
+          <select class="form-select" id="sessionType" [(ngModel)]="newSession!.type" name="type" required>
+            <option value="normal">Normal</option>
+            <option value="exceptionnel">Exceptionnel</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label for="sessionTitle" class="form-label">Titre</label>
+          <input type="text" class="form-control" id="sessionTitle" [(ngModel)]="newSession!.title" name="title" required>
+        </div>
+        <button type="submit" class="btn btn-success">Enregistrer</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Liste des sessions -->
+  <h3>Historique des sessions</h3>
+  <table class="table">
+    <thead>
+    <tr>
+      <th>Date</th>
+      <th>Type</th>
+      <th>Titre</th>
+      <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr *ngFor="let session of sessions">
+      <td>{{ session.date | date:'dd/MM/yyyy' }}</td>
+      <td>{{ session.type }}</td>
+      <td>{{ session.title }}</td>
+      <td>
+        <button class="btn btn-sm btn-info me-2" (click)="recordAttendance(session.id)">Enregistrer présences</button>
+        <input type="file" (change)="uploadProceedings(session.id, $event)" accept=".doc,.docx,.pdf" class="d-none" #fileInput>
+        <button class="btn btn-sm btn-secondary" (click)="fileInput.click()">Archiver PV</button>
+        <a *ngIf="session.proceedingsUrl" [href]="session.proceedingsUrl" target="_blank" class="btn btn-sm btn-link">Voir PV</a>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+
+  <!-- Formulaire d'enregistrement des présences -->
+  <div *ngIf="showParticipantForm" class="card mt-3">
+    <div class="card-body">
+      <h5 class="card-title">Enregistrer les présences</h5>
+      <form (ngSubmit)="saveAttendance()">
+        <div *ngFor="let participant of selectedSession!.participants" class="form-check mb-2">
+          <input class="form-check-input" type="checkbox" [(ngModel)]="participant.present" [id]="'participant' + participant.memberId" [name]="'participant' + participant.memberId">
+          <label class="form-check-label" [for]="'participant' + participant.memberId">
+            {{ participant.name }}
+          </label>
+        </div>
+        <button type="submit" class="btn btn-primary">Enregistrer les présences</button>
+      </form>
+    </div>
+  </div>
+</div>

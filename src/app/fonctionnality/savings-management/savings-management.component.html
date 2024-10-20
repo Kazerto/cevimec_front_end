@@ -1,0 +1,66 @@
+<div class="container mt-4">
+  <h2>Gestion des Épargnes</h2>
+
+  <!-- Créer un compte épargne -->
+  <button class="btn btn-primary mb-3" (click)="createAccount()">Créer un compte épargne</button>
+
+  <!-- Formulaire de création de compte -->
+  <div *ngIf="showAccountForm" class="card mb-3">
+    <div class="card-body">
+      <h5 class="card-title">Créer un nouveau compte épargne</h5>
+      <form (ngSubmit)="saveAccount(memberName.value)">
+        <div class="mb-3">
+          <label for="memberName" class="form-label">Nom du membre</label>
+          <input type="text" class="form-control" id="memberName" #memberName required>
+        </div>
+        <button type="submit" class="btn btn-success">Créer le compte</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Liste des comptes épargne -->
+  <h3>Comptes Épargne</h3>
+  <table class="table">
+    <thead>
+    <tr>
+      <th>Membre</th>
+      <th>Solde</th>
+      <th>Statut</th>
+      <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr *ngFor="let account of savingsAccounts" [class.table-active]="selectedAccount === account">
+      <td>{{ account.memberName }}</td>
+      <td>{{ account.balance | currency:'XAF':'symbol':'1.0-0' }}</td>
+      <td>{{ account.isActive ? 'Actif' : 'Fermé' }}</td>
+      <td>
+        <button class="btn btn-sm btn-info me-2" (click)="selectAccount(account)">Sélectionner</button>
+        <button class="btn btn-sm btn-success me-2" (click)="generateStatement(account)">Générer relevé</button>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+
+  <!-- Actions sur le compte sélectionné -->
+  <div *ngIf="selectedAccount" class="mt-4">
+    <h4>Compte de {{ selectedAccount.memberName }}</h4>
+    <button class="btn btn-success me-2" (click)="openTransactionForm('deposit')">Enregistrer un versement</button>
+    <button class="btn btn-warning me-2" (click)="openTransactionForm('withdrawal')">Enregistrer un retrait</button>
+    <button class="btn btn-danger" (click)="closeAccount()" [disabled]="!selectedAccount.isActive">Fermer le compte</button>
+  </div>
+
+  <!-- Formulaire de transaction -->
+  <div *ngIf="showTransactionForm" class="card mt-3">
+    <div class="card-body">
+      <h5 class="card-title">{{ transactionType === 'deposit' ? 'Versement' : 'Retrait' }}</h5>
+      <form (ngSubmit)="processTransaction()">
+        <div class="mb-3">
+          <label for="transactionAmount" class="form-label">Montant</label>
+          <input type="number" class="form-control" id="transactionAmount" [(ngModel)]="transactionAmount" name="transactionAmount" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Valider</button>
+      </form>
+    </div>
+  </div>
+</div>
