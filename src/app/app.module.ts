@@ -24,6 +24,7 @@ import { ExpensesManagementComponent } from './fonctionnality/expenses-managemen
 import { SanctionsManagementComponent } from './fonctionnality/sanctions-management/sanctions-management.component';
 import {DragDropModule} from "@angular/cdk/drag-drop";
 import { UsersManagementComponent } from './fonctionnality/users-management/users-management.component';
+import {HttpClient, HttpClientModule} from "@angular/common/http";
 
 
 
@@ -52,6 +53,7 @@ import { UsersManagementComponent } from './fonctionnality/users-management/user
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   imports: [
     BrowserModule,
+    HttpClientModule,
     AppRoutingModule,
     ReactiveFormsModule,FormsModule,
     NgxChartsModule,DragDropModule,

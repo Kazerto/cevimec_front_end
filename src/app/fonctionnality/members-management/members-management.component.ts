@@ -1,11 +1,48 @@
 import { Component, OnInit } from '@angular/core';
-import { UserService } from '../../auth/user.service';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+
+enum MemberRole {
+  ADMINISTRATOR = 'ADMINISTRATOR',
+  PRESIDENT = 'PRESIDENT',
+  VICE_PRESIDENT = 'VICE_PRESIDENT',
+  GENERAL_SECRETARY = 'GENERAL_SECRETARY',
+  DEPUTY_GENERAL_SECRETARY = 'DEPUTY_GENERAL_SECRETARY',
+  TREASURER = 'TREASURER',
+  CENSOR = 'CENSOR',
+  STATUTORY_AUDITOR = 'STATUTORY_AUDITOR',
+  SAVINGS_ACCOUNTS_MANAGER = 'SAVINGS_ACCOUNTS_MANAGER'
+}
+
+enum MaritalStatus {
+  SINGLE = 'SINGLE',
+  MARRIED = 'MARRIED',
+  DIVORCED = 'DIVORCED',
+  WIDOWED = 'WIDOWED',
+  SEPARATED = 'SEPARATED'
+}
+
+enum BloodGroup {
+  A_POS = 'A_POS',
+  A_NEG = 'A_NEG',
+  B_POS = 'B_POS',
+  B_NEG = 'B_NEG',
+  AB_POS = 'AB_POS',
+  AB_NEG = 'AB_NEG',
+  O_POS = 'O_POS',
+  O_NEG = 'O_NEG'
+}
+
+enum AccountStatus {
+  ACTIVE = 'ACTIVE',
+  EXCLUDED = 'EXCLUDED',
+  DEPARTED = 'DEPARTED'
+}
 
 interface Member {
   id: number;
   lastName: string;
   firstName: string;
-  birthDate: string;
+  birthDate: Date;
   birthPlace: string;
   country: string;
   region: string;
@@ -13,38 +50,19 @@ interface Member {
   city: string;
   profession: string;
   phoneGabon: string;
-  poBox: string;
+  poBox?: string;
   fatherName: string;
   motherName: string;
-  villageInCameroon: string;
-  emergencyContact: string;
-  contactInCameroon: string;
-  emergencyContactName: string;
-  fatherDeathAid: {
-    received: boolean;
-    year?: string;
-  };
-  motherDeathAid: {
-    received: boolean;
-    year?: string;
-  };
-  maritalStatus: string;
+  villageInCameroon?: string;
+  emergencyContact?: string;
+  contactInCameroon?: string;
+  emergencyContactName?: string;
+  maritalStatus: MaritalStatus;
   spouseIsMember: boolean;
-  spouseInfo?: {
-    name: string;
-    contact: string;
-  };
-  residenceCard: {
-    has: boolean;
-    number?: string;
-  };
-  consulateCard: {
-    has: boolean;
-    number?: string;
-  };
-  joinDate: string;
-  bloodGroup: string;
-  status: 'active' | 'excluded' | 'departed';
+  joinDate: Date;
+  bloodGroup: BloodGroup;
+  accountStatus: AccountStatus;
+  role: MemberRole;
 }
 
 @Component({
@@ -55,114 +73,71 @@ interface Member {
 export class MembersManagementComponent implements OnInit {
   members: Member[] = [];
   selectedMember: Member | null = null;
-  isAddingMember: boolean = false;
-  isEditingMember: boolean = false;
-  showMemberDetails: boolean = false;
-  searchTerm: string = '';
-  currentTab: 'active' | 'excluded' | 'all' = 'active';
+  memberForm: FormGroup;
+  isAddingMember = false;
+  isEditingMember = false;
+  showMemberDetails = false;
+  currentTab: AccountStatus = AccountStatus.ACTIVE;
 
-  // Données de formulaire
-  newMember: Member = this.getEmptyMemberObject();
+  readonly bloodGroups = Object.values(BloodGroup);
+  readonly maritalStatuses = Object.values(MaritalStatus);
+  readonly accountStatuses = Object.values(AccountStatus);
+  readonly memberRoles = Object.values(MemberRole);
 
-  constructor() {
-    // Simuler quelques données
-    this.loadMockData();
+  readonly AccountStatus = AccountStatus;
+  readonly BloodGroup = BloodGroup;
+  readonly MaritalStatus = MaritalStatus;
+  readonly MemberRole = MemberRole;
+
+  constructor(private fb: FormBuilder) {
+    this.memberForm = this.createMemberForm();
   }
 
-  ngOnInit() {}
-
-  private getEmptyMemberObject(): Member {
-    return {
-      id: 0,
-      lastName: '',
-      firstName: '',
-      birthDate: '',
-      birthPlace: '',
-      country: '',
-      region: '',
-      residencePlace: '',
-      city: '',
-      profession: '',
-      phoneGabon: '',
-      poBox: '',
-      fatherName: '',
-      motherName: '',
-      villageInCameroon: '',
-      emergencyContact: '',
-      contactInCameroon: '',
-      emergencyContactName: '',
-      fatherDeathAid: {
-        received: false
-      },
-      motherDeathAid: {
-        received: false
-      },
-      maritalStatus: '',
-      spouseIsMember: false,
-      residenceCard: {
-        has: false
-      },
-      consulateCard: {
-        has: false
-      },
-      joinDate: '',
-      bloodGroup: '',
-      status: 'active'
-    };
+  ngOnInit() {
+    this.loadMembers();
   }
 
-  private loadMockData() {
-    this.members = [
-      {
-        id: 1,
-        lastName: 'SEONE',
-        firstName: 'Assita',
-        birthDate: '2004-08-04',
-        birthPlace: 'Libreville',
-        country: 'Gabon',
-        region: 'Libreville',
-        residencePlace: 'Libreville',
-        city: 'Libreville',
-        profession: 'Student',
-        phoneGabon: '+241074874911',
-        poBox: 'PO 1234',
-        fatherName: 'SEONE Pascal',
-        motherName: 'SEONE ...',
-        villageInCameroon: 'Yaoundé',
-        emergencyContact: '+241060379588',
-        contactInCameroon: '+241060379588',
-        emergencyContactName: 'Komlan',
-        fatherDeathAid: {
-          received: true
-        },
-        motherDeathAid: {
-          received: true
-        },
-        maritalStatus: 'Married',
-        spouseIsMember: true,
-        residenceCard: {
-          has: true,
-          number: 'RC12345'
-        },
-        consulateCard: {
-          has: true,
-          number: 'CC67890'
-        },
-        joinDate: '2024',
-        bloodGroup: 'AB+',
-        status: 'active'
-      },
-    ];
+  private createMemberForm(): FormGroup {
+    return this.fb.group({
+      lastName: ['', [Validators.required, Validators.maxLength(50)]],
+      firstName: ['', [Validators.required, Validators.maxLength(50)]],
+      birthDate: ['', Validators.required],
+      birthPlace: ['', [Validators.required, Validators.maxLength(100)]],
+      country: ['', [Validators.required, Validators.maxLength(50)]],
+      region: ['', [Validators.required, Validators.maxLength(50)]],
+      residencePlace: ['', [Validators.required, Validators.maxLength(200)]],
+      city: ['', [Validators.required, Validators.maxLength(50)]],
+      profession: ['', [Validators.required, Validators.maxLength(50)]],
+      phoneGabon: ['', [Validators.maxLength(20)]],
+      poBox: ['', [Validators.maxLength(20)]],
+      fatherName: ['', [Validators.required, Validators.maxLength(100)]],
+      motherName: ['', [Validators.required, Validators.maxLength(100)]],
+      villageInCameroon: ['', [Validators.maxLength(100)]],
+      emergencyContact: ['', [Validators.maxLength(20)]],
+      contactInCameroon: ['', [Validators.maxLength(20)]],
+      emergencyContactName: ['', [Validators.maxLength(100)]],
+      maritalStatus: [MaritalStatus.SINGLE, Validators.required],
+      spouseIsMember: [false],
+      joinDate: ['', Validators.required],
+      bloodGroup: [BloodGroup.O_POS, Validators.required],
+      accountStatus: [AccountStatus.ACTIVE, Validators.required],
+      role: [MemberRole.ADMINISTRATOR]
+    });
+  }
+
+  private loadMembers() {
+    // TODO: Implement API call to load members
   }
 
   addMember() {
     this.isAddingMember = true;
-    this.newMember = this.getEmptyMemberObject();
+    this.memberForm.reset();
   }
 
   editMember(member: Member) {
     this.isEditingMember = true;
-    this.selectedMember = { ...member };
+    this.selectedMember = member;
+    this.memberForm.patchValue(member);
   }
 
   viewMemberDetails(member: Member) {
@@ -170,34 +145,22 @@ export class MembersManagementComponent implements OnInit {
     this.showMemberDetails = true;
   }
 
-  excludeMember(member: Member) {
-    // Logique d'exclusion
-    member.status = 'excluded';
-  }
-
-  reintegrateMember(member: Member) {
-    // Logique de réintégration
-    member.status = 'active';
-  }
-
   saveMember() {
-    if (this.isAddingMember) {
-      this.members.push({
-        ...this.newMember,
-        id: this.members.length + 1
-      });
-    } else if (this.isEditingMember && this.selectedMember) {
-      const index = this.members.findIndex(m => m.id === this.selectedMember!.id);
-      if (index !== -1) {
-        this.members[index] = this.selectedMember;
+    if (this.memberForm.valid) {
+      const memberData = this.memberForm.value;
+      if (this.isAddingMember) {
+        // TODO: Implement API call to add member
+      } else if (this.isEditingMember && this.selectedMember) {
+        // TODO: Implement API call to update member
       }
+      this.resetForm();
     }
-    this.resetForm();
   }
 
-  generateMembersList() {
-    // Logique pour générer la liste des membres
-    console.log('Generating members list...');
+
+  updateMemberStatus(member: Member, newStatus: AccountStatus) {
+    // TODO: Implement API call to update member status
+    member.accountStatus = newStatus;
   }
 
   protected resetForm() {
@@ -205,6 +168,40 @@ export class MembersManagementComponent implements OnInit {
     this.isEditingMember = false;
     this.selectedMember = null;
     this.showMemberDetails = false;
-    this.newMember = this.getEmptyMemberObject();
+    this.memberForm.reset();
   }
+
+  protected formatDate(date: Date): string {
+    return new Date(date).toLocaleDateString();
+  }
+
+  protected getDisplayAccountStatus(status: AccountStatus): string {
+    const statusMap = {
+      [AccountStatus.ACTIVE]: 'Actif',
+      [AccountStatus.EXCLUDED]: 'Exclu',
+      [AccountStatus.DEPARTED]: 'Parti'
+    };
+    return statusMap[status];
+  }
+
+  protected getStatusBadgeClass(status: AccountStatus): string {
+    const classMap = {
+      [AccountStatus.ACTIVE]: 'bg-success',
+      [AccountStatus.EXCLUDED]: 'bg-danger',
+      [AccountStatus.DEPARTED]: 'bg-warning'
+    };
+    return `badge ${classMap[status]}`;
+  }
+
+  cancelEdit() {
+    this.isAddingMember = false;
+    this.isEditingMember = false;
+    this.memberForm.reset();
+  }
+
+  closeDetails() {
+    this.showMemberDetails = false;
+    this.selectedMember = null;
+  }
+
 }
