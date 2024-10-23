@@ -1,5 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import {ChangeDetectorRef, Component, OnInit} from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import {MemberService} from "../../services/member.service";
+import {Member} from "../../models/member.model";
 
 enum MemberRole {
   ADMINISTRATOR = 'ADMINISTRATOR',
@@ -38,32 +40,7 @@ enum AccountStatus {
   DEPARTED = 'DEPARTED'
 }
 
-interface Member {
-  id: number;
-  lastName: string;
-  firstName: string;
-  birthDate: Date;
-  birthPlace: string;
-  country: string;
-  region: string;
-  residencePlace: string;
-  city: string;
-  profession: string;
-  phoneGabon: string;
-  poBox?: string;
-  fatherName: string;
-  motherName: string;
-  villageInCameroon?: string;
-  emergencyContact?: string;
-  contactInCameroon?: string;
-  emergencyContactName?: string;
-  maritalStatus: MaritalStatus;
-  spouseIsMember: boolean;
-  joinDate: Date;
-  bloodGroup: BloodGroup;
-  accountStatus: AccountStatus;
-  role: MemberRole;
-}
+
 
 @Component({
   selector: 'app-members-management',
@@ -78,6 +55,7 @@ export class MembersManagementComponent implements OnInit {
   isEditingMember = false;
   showMemberDetails = false;
   currentTab: AccountStatus = AccountStatus.ACTIVE;
+  formInitialized = false;
 
   readonly bloodGroups = Object.values(BloodGroup);
   readonly maritalStatuses = Object.values(MaritalStatus);
@@ -89,55 +67,111 @@ export class MembersManagementComponent implements OnInit {
   readonly MaritalStatus = MaritalStatus;
   readonly MemberRole = MemberRole;
 
-  constructor(private fb: FormBuilder) {
+  constructor(
+    private fb: FormBuilder,
+    private cdr: ChangeDetectorRef,
+    private memberService: MemberService  // Ajoutez cette ligne
+  ) {
     this.memberForm = this.createMemberForm();
   }
 
   ngOnInit() {
     this.loadMembers();
+    setTimeout(() => {
+      this.formInitialized = true;
+      this.cdr.detectChanges();
+    });
+  }
+
+  // Recharge les membres après le changement d'onglet
+  changeTab(newStatus: AccountStatus) {
+    this.currentTab = newStatus;
+    this.loadMembers();
+    this.cdr.detectChanges();
   }
 
   private createMemberForm(): FormGroup {
-    return this.fb.group({
+    const form = this.fb.group({
       lastName: ['', [Validators.required, Validators.maxLength(50)]],
       firstName: ['', [Validators.required, Validators.maxLength(50)]],
-      birthDate: ['', Validators.required],
+      birthDate: [null, Validators.required],
       birthPlace: ['', [Validators.required, Validators.maxLength(100)]],
       country: ['', [Validators.required, Validators.maxLength(50)]],
       region: ['', [Validators.required, Validators.maxLength(50)]],
       residencePlace: ['', [Validators.required, Validators.maxLength(200)]],
       city: ['', [Validators.required, Validators.maxLength(50)]],
       profession: ['', [Validators.required, Validators.maxLength(50)]],
-      phoneGabon: ['', [Validators.maxLength(20)]],
+      phoneGabon: ['', [
+        Validators.required,
+        Validators.maxLength(20),
+        Validators.pattern('^[0-9+]+$')
+      ]],
       poBox: ['', [Validators.maxLength(20)]],
       fatherName: ['', [Validators.required, Validators.maxLength(100)]],
       motherName: ['', [Validators.required, Validators.maxLength(100)]],
       villageInCameroon: ['', [Validators.maxLength(100)]],
-      emergencyContact: ['', [Validators.maxLength(20)]],
-      contactInCameroon: ['', [Validators.maxLength(20)]],
-      emergencyContactName: ['', [Validators.maxLength(100)]],
+      emergencyContact: ['', [
+        Validators.required,
+        Validators.maxLength(20),
+        Validators.pattern('^[0-9+]+$')
+      ]],
+      contactInCameroon: ['', [
+        Validators.maxLength(20),
+        Validators.pattern('^[0-9+]+$')
+      ]],
+      emergencyContactName: ['', [Validators.required, Validators.maxLength(100)]],
       maritalStatus: [MaritalStatus.SINGLE, Validators.required],
       spouseIsMember: [false],
-      joinDate: ['', Validators.required],
+      joinDate: [null, Validators.required],
       bloodGroup: [BloodGroup.O_POS, Validators.required],
       accountStatus: [AccountStatus.ACTIVE, Validators.required],
-      role: [MemberRole.ADMINISTRATOR]
+      role: [MemberRole.ADMINISTRATOR, Validators.required]
     });
+
+    // Souscrire aux changements du formulaire
+    form.valueChanges.subscribe(() => {
+      this.cdr.detectChanges();
+    });
+
+    return form;
+  }
+
+  isFormValid(): boolean {
+    return this.memberForm.valid;
   }
 
   private loadMembers() {
-    // TODO: Implement API call to load members
+    this.memberService.getMembersByStatus(this.currentTab).subscribe({
+      next: (members) => {
+        this.members = members;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Erreur lors du chargement des membres:', error);
+        // Gérer l'erreur
+      }
+    });
   }
+
+
 
   addMember() {
     this.isAddingMember = true;
-    this.memberForm.reset();
+    this.memberForm.reset({
+      maritalStatus: MaritalStatus.SINGLE,
+      bloodGroup: BloodGroup.O_POS,
+      accountStatus: AccountStatus.ACTIVE,
+      role: MemberRole.ADMINISTRATOR,
+      spouseIsMember: false
+    });
+    this.cdr.detectChanges();
   }
 
   editMember(member: Member) {
     this.isEditingMember = true;
     this.selectedMember = member;
     this.memberForm.patchValue(member);
+    this.cdr.detectChanges();
   }
 
   viewMemberDetails(member: Member) {
@@ -148,27 +182,75 @@ export class MembersManagementComponent implements OnInit {
   saveMember() {
     if (this.memberForm.valid) {
       const memberData = this.memberForm.value;
-      if (this.isAddingMember) {
-        // TODO: Implement API call to add member
-      } else if (this.isEditingMember && this.selectedMember) {
-        // TODO: Implement API call to update member
+
+      // Convertir les dates
+      if (memberData.birthDate) {
+        memberData.birthDate = new Date(memberData.birthDate);
       }
-      this.resetForm();
+      if (memberData.joinDate) {
+        memberData.joinDate = new Date(memberData.joinDate);
+      }
+
+      // Lors de la création, ne pas inclure l'ID
+      if (this.isAddingMember) {
+        const { id, ...memberWithoutId } = memberData;
+        this.memberService.createMember(memberWithoutId as Member).subscribe({
+          next: (newMember) => {
+            console.log('Membre ajouté avec succès:', newMember);
+            this.loadMembers();
+            this.resetForm();
+          },
+          error: (error) => {
+            console.error('Erreur lors de l\'ajout du membre:', error);
+          }
+        });
+      } else if (this.isEditingMember && this.selectedMember && this.selectedMember.id) { // Add id check
+        const updateData = { ...memberData, id: this.selectedMember.id };
+        this.memberService.updateMember(this.selectedMember.id, updateData).subscribe({
+          next: (updatedMember) => {
+            console.log('Membre mis à jour avec succès:', updatedMember);
+            this.loadMembers();
+            this.resetForm();
+          },
+          error: (error) => {
+            console.error('Erreur lors de la mise à jour du membre:', error);
+          }
+        });
+      }
     }
   }
 
 
   updateMemberStatus(member: Member, newStatus: AccountStatus) {
-    // TODO: Implement API call to update member status
-    member.accountStatus = newStatus;
+    if (!member.id) { // Add null check
+      console.error('Member ID is undefined');
+      return;
+    }
+    this.memberService.updateMemberStatus(member.id, newStatus).subscribe({
+      next: (updatedMember) => {
+        console.log('Statut mis à jour avec succès:', updatedMember);
+        this.loadMembers(); // Recharger la liste
+      },
+      error: (error) => {
+        console.error('Erreur lors de la mise à jour du statut:', error);
+        // Gérer l'erreur
+      }
+    });
   }
 
-  protected resetForm() {
+  resetForm() {
     this.isAddingMember = false;
     this.isEditingMember = false;
     this.selectedMember = null;
     this.showMemberDetails = false;
-    this.memberForm.reset();
+    this.memberForm.reset({
+      maritalStatus: MaritalStatus.SINGLE,
+      bloodGroup: BloodGroup.O_POS,
+      accountStatus: AccountStatus.ACTIVE,
+      role: MemberRole.ADMINISTRATOR,
+      spouseIsMember: false
+    });
+    this.cdr.detectChanges();
   }
 
   protected formatDate(date: Date): string {
@@ -176,21 +258,21 @@ export class MembersManagementComponent implements OnInit {
   }
 
   protected getDisplayAccountStatus(status: AccountStatus): string {
-    const statusMap = {
+    const statusMap: Record<AccountStatus, string> = {
       [AccountStatus.ACTIVE]: 'Actif',
       [AccountStatus.EXCLUDED]: 'Exclu',
       [AccountStatus.DEPARTED]: 'Parti'
     };
-    return statusMap[status];
+    return statusMap[status] || 'Inconnu';
   }
 
   protected getStatusBadgeClass(status: AccountStatus): string {
-    const classMap = {
+    const classMap: Record<AccountStatus, string> = {
       [AccountStatus.ACTIVE]: 'bg-success',
       [AccountStatus.EXCLUDED]: 'bg-danger',
       [AccountStatus.DEPARTED]: 'bg-warning'
     };
-    return `badge ${classMap[status]}`;
+    return `badge ${classMap[status] || 'bg-secondary'}`;
   }
 
   cancelEdit() {

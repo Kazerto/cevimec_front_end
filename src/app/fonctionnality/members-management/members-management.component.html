@@ -23,17 +23,17 @@
         <div class="card-body">
           <ul class="nav nav-tabs">
             <li class="nav-item">
-              <a class="nav-link" [class.active]="currentTab === AccountStatus.ACTIVE" (click)="currentTab = AccountStatus.ACTIVE">
+              <a class="nav-link" [class.active]="currentTab === AccountStatus.ACTIVE" (click)="changeTab(AccountStatus.ACTIVE)">
                 Membres Actifs
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" [class.active]="currentTab === AccountStatus.EXCLUDED" (click)="currentTab = AccountStatus.EXCLUDED">
+              <a class="nav-link" [class.active]="currentTab === AccountStatus.EXCLUDED" (click)="changeTab(AccountStatus.EXCLUDED)">
                 Membres Exclus
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" [class.active]="currentTab === AccountStatus.DEPARTED" (click)="currentTab = AccountStatus.DEPARTED">
+              <a class="nav-link" [class.active]="currentTab === AccountStatus.DEPARTED" (click)="changeTab(AccountStatus.DEPARTED)">
                 Membres Partis
               </a>
             </li>
@@ -516,8 +516,14 @@
 
             <!-- Form Actions -->
             <div class="d-flex justify-content-end gap-2">
-              <button type="button" class="btn btn-secondary" (click)="cancelEdit()">Annuler</button>
-              <button type="submit" class="btn btn-primary" [disabled]="!memberForm.valid">
+              <button type="button" class="btn btn-secondary" (click)="cancelEdit()">
+                Annuler
+              </button>
+              <button
+                type="button"
+                class="btn btn-primary"
+                [disabled]="!memberForm.valid"
+                (click)="saveMember()">
                 {{ isAddingMember ? 'Ajouter' : 'Enregistrer' }}
               </button>
             </div>
