@@ -56,7 +56,16 @@ export interface Member {
     emergencyContactName?: string;
     maritalStatus: MaritalStatus;
     spouseIsMember: boolean;
+    spouseContact?: string;
     joinDate: Date;
+    hasReceivedFatherDeathAid: boolean;
+    fatherDeathAidYear?: string;
+    hasReceivedMotherDeathAid: boolean;
+    motherDeathAidYear?: string;
+    hasResidenceCard: boolean;
+    residenceCardNumber?: string;
+    hasConsulateCard: boolean;
+    consulateCardNumber?: string;
     bloodGroup: BloodGroup;
     accountStatus: AccountStatus;
     role: MemberRole;

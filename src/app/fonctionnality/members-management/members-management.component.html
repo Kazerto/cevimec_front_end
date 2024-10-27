@@ -402,20 +402,61 @@
               </div>
 
               <div class="col-md-6 mb-3">
+                <div class="form-check">
+                  <input type="checkbox" class="form-check-input" formControlName="hasReceivedFatherDeathAid">
+                  <label class="form-check-label">Avez-vous déjà reçu l'aide décès d'un père?</label>
+                </div>
+                <div *ngIf="memberForm.get('hasReceivedFatherDeathAid')?.value">
+                  <input type="text" class="form-control" formControlName="fatherDeathAidYear" placeholder="En quelle année?">
+                </div>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <div class="form-check">
+                  <input type="checkbox" class="form-check-input" formControlName="hasReceivedMotherDeathAid">
+                  <label class="form-check-label">Avez-vous déjà reçu l'aide décès d'une mère?</label>
+                </div>
+                <div *ngIf="memberForm.get('hasReceivedMotherDeathAid')?.value">
+                  <input type="text" class="form-control" formControlName="motherDeathAidYear" placeholder="En quelle année?">
+                </div>
+              </div>
+
+              <div class="col-md-6 mb-3">
                 <label class="form-label">
                   Statut Matrimonial <span class="text-danger">*</span>
                 </label>
                 <select class="form-select"
                         [class.is-invalid]="memberForm.get('maritalStatus')?.invalid &&
-                             (memberForm.get('maritalStatus')?.dirty || memberForm.get('maritalStatus')?.touched)"
-                        formControlName="maritalStatus">
+               (memberForm.get('maritalStatus')?.dirty || memberForm.get('maritalStatus')?.touched)"
+                        formControlName="maritalStatus"
+                        (change)="onMaritalStatusChange($event)">
                   <option value="" disabled>Choisir un statut</option>
                   <option *ngFor="let status of maritalStatuses" [value]="status">{{ status }}</option>
                 </select>
                 <div class="invalid-feedback"
                      *ngIf="memberForm.get('maritalStatus')?.invalid &&
-              (memberForm.get('maritalStatus')?.dirty || memberForm.get('maritalStatus')?.touched)">
+(memberForm.get('maritalStatus')?.dirty || memberForm.get('maritalStatus')?.touched)">
                   <div *ngIf="memberForm.get('maritalStatus')?.errors?.['required']">Le statut matrimonial est requis</div>
+                </div>
+              </div>
+
+              <!-- Question conditionnelle pour le conjoint -->
+              <div class="col-md-6 mb-3" *ngIf="memberForm.get('maritalStatus')?.value === 'Marié'">
+                <label class="form-label">
+                  Votre conjoint(e) fait-il/elle partie de l'association ? <span class="text-danger">*</span>
+                </label>
+                <select class="form-select"
+                        [class.is-invalid]="memberForm.get('spouseIsMember')?.invalid &&
+               (memberForm.get('spouseIsMember')?.dirty || memberForm.get('spouseIsMember')?.touched)"
+                        formControlName="spouseIsMember">
+                  <option value="" disabled>Choisir une option</option>
+                  <option value="true">Oui</option>
+                  <option value="false">Non</option>
+                </select>
+                <div class="invalid-feedback"
+                     *ngIf="memberForm.get('spouseIsMember')?.invalid &&
+(memberForm.get('spouseIsMember')?.dirty || memberForm.get('spouseIsMember')?.touched)">
+                  <div *ngIf="memberForm.get('spouseIsMember')?.errors?.['required']">Une réponse est requise</div>
                 </div>
               </div>
 
@@ -483,6 +524,26 @@
             <!-- Membership Information -->
             <h6 class="mb-3">Informations d'Adhésion</h6>
             <div class="row mb-4">
+              <div class="col-md-6 mb-3">
+                <div class="form-check">
+                  <input type="checkbox" class="form-check-input" formControlName="hasResidenceCard">
+                  <label class="form-check-label">Avez-vous une carte de séjour?</label>
+                </div>
+                <div *ngIf="memberForm.get('hasResidenceCard')?.value">
+                  <input type="text" class="form-control" formControlName="residenceCardNumber" placeholder="Précisez le numéro">
+                </div>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <div class="form-check">
+                  <input type="checkbox" class="form-check-input" formControlName="hasConsulateCard">
+                  <label class="form-check-label">Avez-vous une carte consulaire?</label>
+                </div>
+                <div *ngIf="memberForm.get('hasConsulateCard')?.value">
+                  <input type="text" class="form-control" formControlName="consulateCardNumber" placeholder="Précisez le numéro">
+                </div>
+              </div>
+
               <div class="col-md-6 mb-3">
                 <label class="form-label">Date d'Adhésion</label>
                 <input type="date" class="form-control"

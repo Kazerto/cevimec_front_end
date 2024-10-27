@@ -77,6 +77,28 @@ export class MembersManagementComponent implements OnInit {
 
   ngOnInit() {
     this.loadMembers();
+
+    this.memberForm.get('maritalStatus')?.valueChanges.subscribe(status => {
+      const spouseContactControl = this.memberForm.get('spouseContact');
+      const spouseIsMemberControl = this.memberForm.get('spouseIsMember');
+
+      if (status === MaritalStatus.MARRIED) {
+        spouseIsMemberControl?.setValidators(Validators.required);
+        // Activer conditionnellement la validation du contact du conjoint
+        spouseContactControl?.setValidators([
+          Validators.maxLength(20),
+          Validators.pattern('^[0-9+]+$')
+        ]);
+      } else {
+        spouseIsMemberControl?.clearValidators();
+        spouseContactControl?.clearValidators();
+        spouseIsMemberControl?.setValue(false);
+        spouseContactControl?.setValue('');
+      }
+
+      spouseIsMemberControl?.updateValueAndValidity();
+      spouseContactControl?.updateValueAndValidity();
+    });
     setTimeout(() => {
       this.formInitialized = true;
       this.cdr.detectChanges();
@@ -88,6 +110,17 @@ export class MembersManagementComponent implements OnInit {
     this.currentTab = newStatus;
     this.loadMembers();
     this.cdr.detectChanges();
+  }
+
+  // méthode pour gérer explicitement le changement de statut marital
+  onMaritalStatusChange(event: any) {
+    const status = event.target.value;
+    if (status !== MaritalStatus.MARRIED) {
+      this.memberForm.patchValue({
+        spouseIsMember: false,
+        spouseContact: ''
+      });
+    }
   }
 
   private createMemberForm(): FormGroup {
@@ -120,8 +153,21 @@ export class MembersManagementComponent implements OnInit {
         Validators.pattern('^[0-9+]+$')
       ]],
       emergencyContactName: ['', [Validators.required, Validators.maxLength(100)]],
+      hasReceivedFatherDeathAid: [false],
+      fatherDeathAidYear: [''],
+      hasReceivedMotherDeathAid: [false],
+      motherDeathAidYear: [''],
+
       maritalStatus: [MaritalStatus.SINGLE, Validators.required],
       spouseIsMember: [false],
+      spouseContact: [''],
+
+      residenceCardNumber: [''],
+      hasResidenceCard: [false],
+
+      consulateCardNumber: [''],
+      hasConsulateCard: [false],
+
       joinDate: [null, Validators.required],
       bloodGroup: [BloodGroup.O_POS, Validators.required],
       accountStatus: [AccountStatus.ACTIVE, Validators.required],
@@ -257,22 +303,22 @@ export class MembersManagementComponent implements OnInit {
     return new Date(date).toLocaleDateString();
   }
 
-  protected getDisplayAccountStatus(status: AccountStatus): string {
-    const statusMap: Record<AccountStatus, string> = {
-      [AccountStatus.ACTIVE]: 'Actif',
-      [AccountStatus.EXCLUDED]: 'Exclu',
-      [AccountStatus.DEPARTED]: 'Parti'
-    };
-    return statusMap[status] || 'Inconnu';
-  }
-
-  protected getStatusBadgeClass(status: AccountStatus): string {
-    const classMap: Record<AccountStatus, string> = {
-      [AccountStatus.ACTIVE]: 'bg-success',
-      [AccountStatus.EXCLUDED]: 'bg-danger',
-      [AccountStatus.DEPARTED]: 'bg-warning'
+  protected getStatusBadgeClass(status: string): string {
+    const classMap: { [key: string]: string } = {
+      'ACTIVE': 'bg-success',
+      'EXCLUDED': 'bg-danger',
+      'DEPARTED': 'bg-warning'
     };
     return `badge ${classMap[status] || 'bg-secondary'}`;
+  }
+
+  protected getDisplayAccountStatus(status: string): string {
+    const statusMap: { [key: string]: string } = {
+      'ACTIVE': 'Actif',
+      'EXCLUDED': 'Exclu',
+      'DEPARTED': 'Parti'
+    };
+    return statusMap[status] || 'Inconnu';
   }
 
   cancelEdit() {
