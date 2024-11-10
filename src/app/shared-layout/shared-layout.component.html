@@ -31,14 +31,17 @@
         <div class="nav-actions-wrapper">
           <ul #navActions class="nav nav-pills flex-nowrap overflow-hidden" (scroll)="onScroll()">
             <li class="nav-item" *ngFor="let action of actions">
-              <a class="nav-link mx-1 d-flex align-items-center"
-                 [routerLink]="action.route"
-                 [class.active]="currentAction?.title === action.title"
-                 (click)="setCurrentAction(action)">
-                <span class="me-2">{{ action.icon }}</span>
-                {{ action.title }}
-              </a>
+              <ng-container *ngIf="action.roles.includes(getRole())">
+                <a class="nav-link mx-1 d-flex align-items-center"
+                   [routerLink]="action.route"
+                   [class.active]="currentAction?.title === action.title"
+                   (click)="setCurrentAction(action)">
+                  <span class="me-2">{{ action.icon }}</span>
+                  {{ action.title }}
+                </a>
+              </ng-container>
             </li>
+
           </ul>
         </div>
 

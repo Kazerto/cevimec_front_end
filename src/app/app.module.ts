@@ -21,10 +21,11 @@ import { TontineManagementComponent } from './fonctionnality/tontine-management/
 import { SavingsManagementComponent } from './fonctionnality/savings-management/savings-management.component';
 import { AidsManagementComponent } from './fonctionnality/aids-management/aids-management.component';
 import { ExpensesManagementComponent } from './fonctionnality/expenses-management/expenses-management.component';
-import { SanctionsManagementComponent } from './fonctionnality/sanctions-management/sanctions-management.component';
+//import { SanctionsManagementComponent } from './fonctionnality/sanctions-management/sanctions-management.component';
 import {DragDropModule} from "@angular/cdk/drag-drop";
 import { UsersManagementComponent } from './fonctionnality/users-management/users-management.component';
 import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {RouterModule} from "@angular/router";
 
 
 
@@ -47,7 +48,7 @@ import {HttpClient, HttpClientModule} from "@angular/common/http";
     AidsManagementComponent,
     SavingsManagementComponent,
     TontineManagementComponent,
-    SanctionsManagementComponent,
+    //SanctionsManagementComponent,
     UsersManagementComponent
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
@@ -57,6 +58,7 @@ import {HttpClient, HttpClientModule} from "@angular/common/http";
     AppRoutingModule,
     ReactiveFormsModule,FormsModule,
     NgxChartsModule,DragDropModule,
+    RouterModule,
   ],
   providers: [UserService],
   bootstrap: [AppComponent]

@@ -38,11 +38,11 @@ export class LoginComponent implements OnInit {
 
       // Rediriger l'utilisateur en fonction du rôle
       if (role === 'admin') {
-        this.router.navigate(['/admin']);
+        this.router.navigate(['/dashboard']);
       } else if (role === 'president') {
         this.router.navigate(['/dashboard']);
       } else if (role === 'secretary') {
-        this.router.navigate(['/secretaryGeneral']); // Redirection corrigée
+        this.router.navigate(['/members']);
       } else {
         console.log('Rôle non reconnu');
       }

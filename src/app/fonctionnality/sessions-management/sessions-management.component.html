@@ -1,6 +1,18 @@
 <div class="container mt-4">
   <h2>Gestion des Sessions</h2>
 
+  <!-- Loading spinner -->
+  <div *ngIf="loading" class="text-center">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Chargement...</span>
+    </div>
+  </div>
+
+  <!-- Error message -->
+  <div *ngIf="error" class="alert alert-danger">
+    {{ error }}
+  </div>
+
   <!-- Planifier une session -->
   <button class="btn btn-primary mb-3" (click)="planSession()">Planifier une session</button>
 
@@ -11,18 +23,35 @@
       <form (ngSubmit)="saveSession()">
         <div class="mb-3">
           <label for="sessionDate" class="form-label">Date</label>
-          <input type="date" class="form-control" id="sessionDate" [(ngModel)]="newSession!.date" name="date" required>
+          <input
+            type="date"
+            class="form-control"
+            id="sessionDate"
+            [(ngModel)]="newSession!.date"
+            name="date"
+            required>
         </div>
         <div class="mb-3">
           <label for="sessionType" class="form-label">Type</label>
-          <select class="form-select" id="sessionType" [(ngModel)]="newSession!.type" name="type" required>
-            <option value="normal">Normal</option>
-            <option value="exceptionnel">Exceptionnel</option>
+          <select
+            class="form-select"
+            id="sessionType"
+            [(ngModel)]="newSession!.sessionType"
+            name="sessionType"
+            required>
+            <option value="NORMAL">Normal</option>
+            <option value="EXCEPTIONAL">Exceptionnel</option>
           </select>
         </div>
         <div class="mb-3">
-          <label for="sessionTitle" class="form-label">Titre</label>
-          <input type="text" class="form-control" id="sessionTitle" [(ngModel)]="newSession!.title" name="title" required>
+          <label for="sessionAgenda" class="form-label">Agenda</label>
+          <textarea
+            class="form-control"
+            id="sessionAgenda"
+            [(ngModel)]="newSession!.agenda"
+            name="agenda"
+            required>
+          </textarea>
         </div>
         <button type="submit" class="btn btn-success">Enregistrer</button>
       </form>
@@ -30,44 +59,79 @@
   </div>
 
   <!-- Liste des sessions -->
-  <h3>Historique des sessions</h3>
-  <table class="table">
-    <thead>
-    <tr>
-      <th>Date</th>
-      <th>Type</th>
-      <th>Titre</th>
-      <th>Actions</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr *ngFor="let session of sessions">
-      <td>{{ session.date | date:'dd/MM/yyyy' }}</td>
-      <td>{{ session.type }}</td>
-      <td>{{ session.title }}</td>
-      <td>
-        <button class="btn btn-sm btn-info me-2" (click)="recordAttendance(session.id)">Enregistrer présences</button>
-        <input type="file" (change)="uploadProceedings(session.id, $event)" accept=".doc,.docx,.pdf" class="d-none" #fileInput>
-        <button class="btn btn-sm btn-secondary" (click)="fileInput.click()">Archiver PV</button>
-        <a *ngIf="session.proceedingsUrl" [href]="session.proceedingsUrl" target="_blank" class="btn btn-sm btn-link">Voir PV</a>
-      </td>
-    </tr>
-    </tbody>
-  </table>
+  <div class="table-responsive">
+    <table class="table">
+      <thead>
+      <tr>
+        <th>Date</th>
+        <th>Type</th>
+        <th>Agenda</th>
+        <th>Statut</th>
+        <th>Petite Tontine</th>
+        <th>Grande Tontine</th>
+        <th>Sanctions</th>
+        <th>Panier</th>
+        <th>Dépenses</th>
+        <th>Solde</th>
+        <th>Actions</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr *ngFor="let session of sessions">
+        <td>{{ session.date | date:'dd/MM/yyyy' }}</td>
+        <td>{{ session.sessionType }}</td>
+        <td>{{ session.agenda }}</td>
+        <td>
+            <span [class]="session.status === 'open' ? 'badge bg-success' : 'badge bg-secondary'">
+              {{ session.status }}
+            </span>
+        </td>
+        <td>{{ session.smallTontineTotal | number }} FCFA</td>
+        <td>{{ session.bigTontineTotal | number }} FCFA</td>
+        <td>{{ session.sanctionTotal | number }} FCFA</td>
+        <td>{{ session.householdBasketTotal | number }} FCFA</td>
+        <td>{{ session.expensesTotal | number }} FCFA</td>
+        <td>{{ getSessionBalance(session) | number }} FCFA</td>
+        <td>
+          <button
+            *ngIf="session.status === 'open'"
+            class="btn btn-sm btn-info me-2"
+            (click)="selectSession(session)">
+            Présences
+          </button>
+          <button
+            *ngIf="session.status === 'open'"
+            class="btn btn-sm btn-danger"
+            (click)="showClosingConfirmation = true; selectedSession = session">
+            Clôturer
+          </button>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
 
-  <!-- Formulaire d'enregistrement des présences -->
-  <div *ngIf="showParticipantForm" class="card mt-3">
-    <div class="card-body">
-      <h5 class="card-title">Enregistrer les présences</h5>
-      <form (ngSubmit)="saveAttendance()">
-        <div *ngFor="let participant of selectedSession!.participants" class="form-check mb-2">
-          <input class="form-check-input" type="checkbox" [(ngModel)]="participant.present" [id]="'participant' + participant.memberId" [name]="'participant' + participant.memberId">
-          <label class="form-check-label" [for]="'participant' + participant.memberId">
-            {{ participant.name }}
-          </label>
+  <!-- Modal de confirmation de clôture -->
+  <div *ngIf="showClosingConfirmation" class="modal d-block" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Confirmation de clôture de session</h5>
+          <button type="button" class="btn-close" (click)="showClosingConfirmation = false"></button>
         </div>
-        <button type="submit" class="btn btn-primary">Enregistrer les présences</button>
-      </form>
+        <div class="modal-body">
+          <p>Vous êtes sur le point de clôturer la session du {{ selectedSession?.date | date:'dd/MM/yyyy' }}</p>
+          <div class="alert alert-info">
+            <strong>Solde final :</strong>
+            {{ getSessionBalance(selectedSession!) | number }} FCFA
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="showClosingConfirmation = false">Annuler</button>
+          <button type="button" class="btn btn-primary" (click)="closeSession()">Confirmer la clôture</button>
+        </div>
+      </div>
     </div>
+    <div class="modal-backdrop fade show"></div>
   </div>
 </div>

@@ -1,17 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-
-interface Session {
-  id: number;
-  date: Date;
-  type: 'normal' | 'exceptionnel';
-  title: string;
-  participants: {
-    memberId: number;
-    name: string;
-    present: boolean;
-  }[];
-  proceedingsUrl?: string;
-}
+import { SessionService } from '../../services/session.service';
+import { MemberService } from '../../services/member.service';
+import { Session } from '../../models/session.model';
+import { Member, AccountStatus } from '../../models/member.model';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-sessions-management',
@@ -20,81 +12,149 @@ interface Session {
 })
 export class SessionsManagementComponent implements OnInit {
   sessions: Session[] = [];
+  members: Member[] = [];
+  activeMembers: Member[] = [];
   newSession: Session | null = null;
   selectedSession: Session | null = null;
   showSessionForm = false;
-  showParticipantForm = false;
+  showPaymentForm = false;
+  showFundMovementForm = false;
+  showClosingConfirmation = false;
+  loading = false;
+  error = '';
 
-  constructor() { }
+  readonly SMALL_TONTINE_AMOUNT = 15000;  // Montant fixe pour la petite tontine
+
+  constructor(
+    private sessionService: SessionService,
+    private memberService: MemberService
+  ) {}
 
   ngOnInit(): void {
-    this.loadMockSessions();
-  }
-
-  loadMockSessions() {
-    this.sessions = [
-      {
-        id: 1,
-        date: new Date('2024-03-01'),
-        type: 'normal',
-        title: 'Réunion mensuelle de Mars',
-        participants: [
-          { memberId: 1, name: 'Jean Dupont', present: true },
-          { memberId: 2, name: 'Marie Martin', present: false },
-        ]
+    this.loading = true;
+    forkJoin({
+      sessions: this.sessionService.getAllSessions(),
+      members: this.memberService.getAllMembers()
+    }).subscribe({
+      next: (result) => {
+        this.sessions = result.sessions;
+        this.members = result.members;
+        this.activeMembers = this.members.filter(m => m.accountStatus === AccountStatus.ACTIVE);
+        this.loading = false;
       },
-      {
-        id: 2,
-        date: new Date('2024-04-01'),
-        type: 'normal',
-        title: 'Réunion mensuelle d\'Avril',
-        participants: [
-          { memberId: 1, name: 'Jean Dupont', present: true },
-          { memberId: 2, name: 'Marie Martin', present: true },
-        ],
-        proceedingsUrl: 'assets/pv_avril_2024.pdf'
+      error: (error) => {
+        this.error = 'Erreur lors du chargement des données';
+        this.loading = false;
+        console.error('Erreur:', error);
       }
-    ];
+    });
   }
 
-  planSession() {
+  planSession(): void {
     this.newSession = {
-      id: this.sessions.length + 1,
       date: new Date(),
-      type: 'normal',
-      title: '',
-      participants: []
+      agenda: '',
+      sessionType: 'NORMAL',
+      membersPresent: [],
+      smallTontineTotal: 0,
+      sanctionTotal: 0,
+      bigTontineTotal: 0,
+      householdBasketTotal: 0,
+      expensesTotal: 0,
+      status: 'open'
     };
     this.showSessionForm = true;
   }
 
-  saveSession() {
+  saveSession(): void {
     if (this.newSession) {
-      this.sessions.push(this.newSession);
-      this.newSession = null;
-      this.showSessionForm = false;
+      this.loading = true;
+      this.sessionService.createSession(this.newSession).subscribe({
+        next: (session) => {
+          this.sessions.push(session);
+          this.newSession = null;
+          this.showSessionForm = false;
+          this.loading = false;
+        },
+        error: (error) => {
+          this.error = 'Erreur lors de la création de la session';
+          this.loading = false;
+          console.error('Erreur:', error);
+        }
+      });
     }
   }
 
-  uploadProceedings(sessionId: number, event: any) {
-    const file = event.target.files[0];
-    if (file) {
-      // Simuler le téléchargement du fichier
-      const session = this.sessions.find(s => s.id === sessionId);
-      if (session) {
-        session.proceedingsUrl = 'assets/' + file.name;
+  selectSession(session: Session): void {
+    this.selectedSession = session;
+    this.showPaymentForm = true;
+  }
+
+  updateSession(session: Session): void {
+    this.loading = true;
+    this.sessionService.updateSession(session.id!, session).subscribe({
+      next: (updatedSession) => {
+        const index = this.sessions.findIndex(s => s.id === updatedSession.id);
+        if (index !== -1) {
+          this.sessions[index] = updatedSession;
+        }
+        this.loading = false;
+      },
+      error: (error) => {
+        this.error = 'Erreur lors de la mise à jour de la session';
+        this.loading = false;
+        console.error('Erreur:', error);
       }
+    });
+  }
+
+  addMembersToSession(sessionId: number, memberIds: number[]): void {
+    this.loading = true;
+    this.sessionService.addMembersToSession(sessionId, memberIds).subscribe({
+      next: () => {
+        // Rafraîchir la session
+        this.sessionService.getSession(sessionId).subscribe(
+          updatedSession => {
+            const index = this.sessions.findIndex(s => s.id === sessionId);
+            if (index !== -1) {
+              this.sessions[index] = updatedSession;
+            }
+          }
+        );
+        this.loading = false;
+      },
+      error: (error) => {
+        this.error = 'Erreur lors de l\'ajout des membres';
+        this.loading = false;
+        console.error('Erreur:', error);
+      }
+    });
+  }
+
+  closeSession(): void {
+    if (this.selectedSession && this.selectedSession.id) {
+      this.selectedSession.status = 'closed';
+      this.updateSession(this.selectedSession);
+      this.showClosingConfirmation = false;
     }
   }
 
-  recordAttendance(sessionId: number) {
-    this.selectedSession = this.sessions.find(s => s.id === sessionId) || null;
-    this.showParticipantForm = true;
+  // Méthodes utilitaires
+  getMemberFullName(memberId: number): string {
+    const member = this.members.find(m => m.id === memberId);
+    return member ? `${member.lastName} ${member.firstName}` : 'Membre inconnu';
   }
 
-  saveAttendance() {
-    // Logique pour sauvegarder la présence
-    this.showParticipantForm = false;
-    this.selectedSession = null;
+  getTotalCollected(session: Session): number {
+    return (
+      session.smallTontineTotal +
+      session.bigTontineTotal +
+      session.sanctionTotal +
+      session.householdBasketTotal
+    );
+  }
+
+  getSessionBalance(session: Session): number {
+    return this.getTotalCollected(session) - session.expensesTotal;
   }
 }

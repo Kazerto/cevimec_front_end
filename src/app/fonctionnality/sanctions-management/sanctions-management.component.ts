@@ -1,99 +1,40 @@
-import { Component, OnInit } from '@angular/core';
+import { Injectable } from '@angular/core';
+import {HttpClient, HttpParams} from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { Sanction, SessionMemberSanction, SanctionType } from '../../models/sanction.model';
+import { Member } from '../../models/member.model';
 
-interface Sanction {
-  id: number;
-  memberId: number;
-  memberName: string;
-  reason: string;
-  amount: number;
-  date: Date;
-  sessionId: number;
-  isPaid: boolean;
-}
-
-@Component({
-  selector: 'app-sanctions-management',
-  templateUrl: './sanctions-management.component.html',
-  styleUrls: ['./sanctions-management.component.css']
+@Injectable({
+  providedIn: 'root'
 })
-export class SanctionsManagementComponent implements OnInit {
-  sanctions: Sanction[] = [];
-  newSanction: Sanction | null = null;
-  showSanctionForm = false;
-  selectedSessionId: number | null = null;
+export class SanctionService {
+  private apiUrl = 'http://localhost:8080/api/sanctions';
 
-  constructor() { }
+  constructor(private http: HttpClient) { }
 
-  ngOnInit(): void {
-    this.loadMockSanctions();
+  // Obtenir tous les types de sanctions avec leurs montants prédéfinis
+  getAllSanctionTypes(): Observable<Sanction[]> {
+    return this.http.get<Sanction[]>(`${this.apiUrl}/types`);
   }
 
-  loadMockSanctions() {
-    this.sanctions = [
-      {
-        id: 1,
-        memberId: 1,
-        memberName: 'Jean Dupont',
-        reason: 'Retard à la réunion',
-        amount: 1000,
-        date: new Date('2024-03-01'),
-        sessionId: 1,
-        isPaid: true
-      },
-      {
-        id: 2,
-        memberId: 2,
-        memberName: 'Marie Martin',
-        reason: 'Absence non justifiée',
-        amount: 2000,
-        date: new Date('2024-04-01'),
-        sessionId: 2,
-        isPaid: false
-      }
-    ];
+  // Appliquer une sanction à un membre dans une session spécifique
+  applySanction(sessionId: number, memberId: number, sanctionType: SanctionType, comments?: string): Observable<SessionMemberSanction> {
+    const params = new HttpParams()
+      .set('sessionId', sessionId.toString())
+      .set('memberId', memberId.toString())
+      .set('sanctionType', sanctionType)
+      .set('comments', comments || '');
+
+    return this.http.post<SessionMemberSanction>(`${this.apiUrl}/apply`, null, { params });
   }
 
-  openSanctionForm(sessionId: number) {
-    this.selectedSessionId = sessionId;
-    this.newSanction = {
-      id: this.sanctions.length + 1,
-      memberId: 0,
-      memberName: '',
-      reason: '',
-      amount: 0,
-      date: new Date(),
-      sessionId: sessionId,
-      isPaid: false
-    };
-    this.showSanctionForm = true;
+  // Obtenir toutes les sanctions pour une session donnée
+  getSessionSanctions(sessionId: number): Observable<SessionMemberSanction[]> {
+    return this.http.get<SessionMemberSanction[]>(`${this.apiUrl}/session/${sessionId}`);
   }
 
-  saveSanction() {
-    if (this.newSanction) {
-      this.sanctions.push(this.newSanction);
-      this.newSanction = null;
-      this.showSanctionForm = false;
-      this.selectedSessionId = null;
-    }
-  }
-
-  togglePaymentStatus(sanction: Sanction) {
-    sanction.isPaid = !sanction.isPaid;
-  }
-
-  getTotalSanctionsAmount(): number {
-    return this.sanctions.reduce((total, sanction) => total + sanction.amount, 0);
-  }
-
-  getPaidSanctionsAmount(): number {
-    return this.sanctions
-      .filter(sanction => sanction.isPaid)
-      .reduce((total, sanction) => total + sanction.amount, 0);
-  }
-
-  getUnpaidSanctionsAmount(): number {
-    return this.sanctions
-      .filter(sanction => !sanction.isPaid)
-      .reduce((total, sanction) => total + sanction.amount, 0);
+  // Supprimer une sanction
+  deleteSanction(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/applied/${id}`);
   }
 }

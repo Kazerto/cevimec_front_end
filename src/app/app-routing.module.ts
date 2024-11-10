@@ -15,33 +15,35 @@ import {TontineManagementComponent} from "./fonctionnality/tontine-management/to
 import {SavingsManagementComponent} from "./fonctionnality/savings-management/savings-management.component";
 import {AidsManagementComponent} from "./fonctionnality/aids-management/aids-management.component";
 import {ExpensesManagementComponent} from "./fonctionnality/expenses-management/expenses-management.component";
-import {SanctionsManagementComponent} from "./fonctionnality/sanctions-management/sanctions-management.component";
+//import {SanctionsManagementComponent} from "./fonctionnality/sanctions-management/sanctions-management.component";
 import {UsersManagementComponent} from "./fonctionnality/users-management/users-management.component";
+import { AuthGuard } from './guard/AuthGuard';
+
 
 const routes: Routes = [
   { path: 'login', component: LoginComponent },  // Route séparée pour la page de connexion
   { path: '', redirectTo: '/login', pathMatch: 'full' },
-  { path: "admin", component: AdminComponent},
-  { path: "president", component: PresidentComponent},
-  { path: "secretaryGeneral", component: SecretaryGeneralComponent},
+  { path: "admin", component: AdminComponent, canActivate: [AuthGuard], data: { roles: ['ADMIN'] }},
+  { path: "president", component: PresidentComponent, canActivate: [AuthGuard], data: { roles: ['PRESIDENT']}},
+  { path: "secretaryGeneral", component: SecretaryGeneralComponent, canActivate: [AuthGuard], data: { roles: ['SECRETAIRE_GENERAL']}},
+
+
 
   {
     path: '',
     component: SharedLayoutComponent,
     children: [
-      { path: 'dashboard', component: DashboardComponent },
-      { path: 'members', component: MembersManagementComponent },
-      { path: 'sessions', component: SessionsManagementComponent },
-      { path: 'configuration', component: SettingsComponent },
-      { path: 'loans', component: LoansManagementComponent },
-      { path: 'small-tontine', component: SmallTontineManagementComponent },
-      { path: 'tontines', component: TontineManagementComponent },
-      { path: 'savings', component: SavingsManagementComponent },
-      { path: 'aids', component: AidsManagementComponent },
-      { path: 'expenses', component: ExpensesManagementComponent },
-      { path: 'sanctions', component: SanctionsManagementComponent },
-      { path: 'users', component: UsersManagementComponent },
-
+      { path: 'dashboard', component: DashboardComponent, canActivate: [AuthGuard], data: { roles: ['admin', 'president', 'secretaryGeneral'] } },
+      { path: 'members', component: MembersManagementComponent, canActivate: [AuthGuard], data: { roles: ['admin', 'president', 'secretaryGeneral'] } },
+      { path: 'sessions', component: SessionsManagementComponent, canActivate: [AuthGuard], data: { roles: ['admin', 'president', 'secretaryGeneral'] } },
+      { path: 'configuration', component: SettingsComponent, canActivate: [AuthGuard], data: { roles: ['admin'] } },
+      { path: 'loans', component: LoansManagementComponent, canActivate: [AuthGuard], data: { roles: ['admin', 'president'] } },
+      { path: 'small-tontine', component: SmallTontineManagementComponent, canActivate: [AuthGuard], data: { roles: ['admin', 'president', 'secretaryGeneral'] } },
+      { path: 'tontines', component: TontineManagementComponent, canActivate: [AuthGuard], data: { roles: ['admin', 'president', 'secretaryGeneral'] } },
+      { path: 'savings', component: SavingsManagementComponent, canActivate: [AuthGuard], data: { roles: ['admin', 'president', 'secretaryGeneral'] } },
+      { path: 'aids', component: AidsManagementComponent, canActivate: [AuthGuard], data: { roles: ['admin', 'president'] } },
+      { path: 'expenses', component: ExpensesManagementComponent, canActivate: [AuthGuard], data: { roles: ['admin', 'president', 'secretaryGeneral'] } },
+      { path: 'users', component: UsersManagementComponent, canActivate: [AuthGuard], data: { roles: ['admin'] } },
     ]
   },
   { path: '**', redirectTo: 'login' } // Redirection par défaut vers login si aucune route ne correspond
