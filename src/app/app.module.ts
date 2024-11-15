@@ -7,7 +7,6 @@ import { LoginComponent } from './login/login.component';
 import { AppRoutingModule } from './app-routing.module';
 import { AdminComponent } from './admin/admin.component';
 import { PresidentComponent } from './president/president.component';
-import { SecretaryGeneralComponent } from './secretary-general/secretary-general.component';
 import { NavComponent } from './nav/nav.component';
 import { UserService } from './auth/user.service';
 import { SettingsComponent } from './fonctionnality/settings/settings.component';
@@ -26,6 +25,8 @@ import {DragDropModule} from "@angular/cdk/drag-drop";
 import { UsersManagementComponent } from './fonctionnality/users-management/users-management.component';
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {RouterModule} from "@angular/router";
+import { UserListComponent } from './fonctionnality/users-management/user-list/user-list.component';
+import { UserFormComponent } from './fonctionnality/users-management/user-form/user-form.component';
 
 
 
@@ -49,7 +50,9 @@ import {RouterModule} from "@angular/router";
     SavingsManagementComponent,
     TontineManagementComponent,
     //SanctionsManagementComponent,
-    UsersManagementComponent
+    UsersManagementComponent,
+    UserListComponent,
+    UserFormComponent
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   imports: [

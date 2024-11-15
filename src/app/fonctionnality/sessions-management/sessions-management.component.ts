@@ -113,14 +113,14 @@ export class SessionsManagementComponent implements OnInit {
     this.sessionService.addMembersToSession(sessionId, memberIds).subscribe({
       next: () => {
         // Rafraîchir la session
-        this.sessionService.getSession(sessionId).subscribe(
+        /*this.sessionService.getSession(sessionId).subscribe(
           updatedSession => {
             const index = this.sessions.findIndex(s => s.id === sessionId);
             if (index !== -1) {
               this.sessions[index] = updatedSession;
             }
           }
-        );
+        );*/
         this.loading = false;
       },
       error: (error) => {

@@ -1,29 +1,47 @@
 import { Injectable } from '@angular/core';
 import { CanActivate, ActivatedRouteSnapshot, Router, RouterStateSnapshot } from '@angular/router';
-import { UserService } from '../services/users.service';
+import { AppUserService } from '../services/app-user.service';
+import {UserService} from "../auth/user.service";
+import {Observable} from "rxjs";
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthGuard implements CanActivate {
 
-  constructor(private userService: UserService, private router: Router) {}
+  constructor(private appUserService: AppUserService, private router: Router) {}
 
-  canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean {
-    const userRole = this.userService.getRole();
-    const allowedRoles = route.data['roles'] as Array<string>;
+  canActivate(
+    next: ActivatedRouteSnapshot,
+    state: RouterStateSnapshot
+  ): Observable<boolean> | Promise<boolean> | boolean {
+    const userRole = this.appUserService.getRole();
 
-    // Permettre l'accès à la route de login sans vérification de rôle
-    if (state.url === '/login') {
-      return true;
+    if (!userRole) {
+      this.router.navigate(['/login']);
+      return false;
     }
 
-    if (allowedRoles && !allowedRoles.includes(userRole)) {
-      this.router.navigate(['/login']);
+    // Vérifier les rôles de manière plus précise
+    const normalizedUserRole = this.normalizeRole(userRole);
+    const expectedRoles = next.data['roles'] as Array<string>;
+
+    if (!expectedRoles || !expectedRoles.includes(normalizedUserRole)) {
+      console.log('Accès refusé pour le rôle:', normalizedUserRole);
+      this.router.navigate(['/access-denied']);
       return false;
     }
 
     return true;
   }
 
+  private normalizeRole(role: string): string {
+    // Convertit les rôles du backend vers le format utilisé dans les routes
+    switch(role) {
+      case 'ADMINISTRATOR': return 'admin';
+      case 'PRESIDENT': return 'president';
+      case 'GENERAL_SECRETARY': return 'secretaryGeneral';
+      default: return role.toLowerCase();
+    }
+  }
 }

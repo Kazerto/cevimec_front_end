@@ -1,20 +1,19 @@
+import {Member} from "./member.model";
+import {Session} from "./session.model";
+
+
 export interface SmallTontine {
   id: number;
-  startDate: Date;
-  endDate: Date;
+  members: Member[];
+  sessions: Session[];
+  amount: number;  // BigDecimal in Java, number in TypeScript
+  openDate: Date;
+  contributionSmallTontine?: ContributionSmallTontine[];
 }
 
-export interface Cotisation {
+export interface ContributionSmallTontine {
   id: number;
-  memberId: number;
-  montant: number;
-  date: Date;
+  smallTontine: SmallTontine;
+  amount?: number;
 }
 
-export interface MouvementFonds {
-  id: number;
-  type: 'entree' | 'sortie';
-  montant: number;
-  date: Date;
-  description: string;
-}

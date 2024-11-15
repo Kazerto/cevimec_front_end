@@ -1,15 +1,17 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
-import { Session } from '../models/session.model';
+import { Loan } from '../models/loan.model';
+
+
 
 @Injectable({
   providedIn: 'root'
 })
-export class SessionService {
-  private apiUrl = `${environment.apiUrl}/sessions`;
+export class LoanService {
+  private apiUrl = `${environment.apiUrl}/loan`;
 
   private httpOptions = {
     headers: new HttpHeaders({
@@ -20,52 +22,41 @@ export class SessionService {
 
   constructor(private http: HttpClient) {}
 
-  getAllSessions(): Observable<Session[]> {
-    return this.http.get<Session[]>(this.apiUrl, this.httpOptions).pipe(
+  getAllLoans(): Observable<Loan[]> {
+    return this.http.get<Loan[]>(this.apiUrl, this.httpOptions).pipe(
       catchError(this.handleError)
     );
   }
 
-  getSessionById(id: number): Observable<Session> {
+  getLoansInTheYear(year: number): Observable<Loan[]> {
+    const url = `${this.apiUrl}/annee/${year}`;
+    return this.http.get<Loan[]>(url, this.httpOptions).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  createLoan(loan: Partial<Loan>): Observable<Loan> {
+    return this.http.post<Loan>(this.apiUrl, loan, this.httpOptions).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  updateLoan(loan: Loan): Observable<Loan> {
+    return this.http.put<Loan>(this.apiUrl, loan, this.httpOptions).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  deleteLoan(id: number): Observable<boolean> {
     const url = `${this.apiUrl}/${id}`;
-    return this.http.get<Session>(url, this.httpOptions).pipe(
+    return this.http.delete<boolean>(url, this.httpOptions).pipe(
       catchError(this.handleError)
     );
   }
 
-  createSession(session: Partial<Session>): Observable<Session> {
-    return this.http.post<Session>(this.apiUrl, session, this.httpOptions).pipe(
-      catchError(this.handleError)
-    );
-  }
-
-  updateSession(id: number, sessionDetails: Partial<Session>): Observable<Session> {
-    const url = `${this.apiUrl}/${id}`;
-    return this.http.put<Session>(url, sessionDetails, this.httpOptions).pipe(
-      catchError(this.handleError)
-    );
-  }
-
-  deleteSession(id: number): Observable<void> {
-    const url = `${this.apiUrl}/${id}`;
-    return this.http.delete<void>(url, this.httpOptions).pipe(
-      catchError(this.handleError)
-    );
-  }
-
-  searchSessions(key: string): Observable<Session[]> {
-    const params = new HttpParams().set('key', key);
-    const url = `${this.apiUrl}/search`;
-    return this.http.get<Session[]>(url, { ...this.httpOptions, params }).pipe(
-      catchError(this.handleError)
-    );
-  }
-
-  addMembersToSession(sessionId: number, memberIds: number[]): Observable<void> {
-    const url = `${this.apiUrl}/${sessionId}/add-members`;
-    return this.http.post<void>(url, memberIds, this.httpOptions).pipe(
-      catchError(this.handleError)
-    );
+  // Méthode utilitaire pour calculer le remboursement total
+  calculateTotalRepayment(amount: number, interestRate: number = 0.05): number {
+    return amount + (amount * interestRate);
   }
 
   private handleError(error: HttpErrorResponse) {

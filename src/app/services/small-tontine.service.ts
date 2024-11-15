@@ -1,144 +1,107 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
-
-// Interfaces pour la petite tontine
-export interface SmallTontine {
-  id: number;
-  startDate: Date;
-  endDate: Date;
-}
-
-export interface Contribution {
-  id: number;
-  memberId: number;
-  amount: number;
-  date: Date;
-  memberName?: string;  // Pour afficher le nom du membre
-  status: 'PENDING' | 'PAID' | 'LATE';
-}
+import { SmallTontine } from '../models/small-tontine.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class SmallTontineService {
-  private apiUrl = `${environment.apiUrl}/small-tontines`;
+  private apiUrl = `${environment.apiUrl}/api/small-tontine`;
+
+  private httpOptions = {
+    headers: new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    })
+  };
 
   constructor(private http: HttpClient) {}
 
-  /**
-   * Récupère toutes les petites tontines
-   */
+  // Récupérer toutes les small tontines
   getAllSmallTontines(): Observable<SmallTontine[]> {
-    return this.http.get<SmallTontine[]>(this.apiUrl).pipe(
-      map(tontines => this.convertDates(tontines)),
+    return this.http.get<SmallTontine[]>(this.apiUrl, this.httpOptions).pipe(
       catchError(this.handleError)
     );
   }
 
-  /**
-   * Récupère une petite tontine par son ID
-   */
+  // Récupérer une small tontine par son ID
   getSmallTontineById(id: number): Observable<SmallTontine> {
-    return this.http.get<SmallTontine>(`${this.apiUrl}/${id}`).pipe(
-      map(tontine => this.convertDates([tontine])[0]),
+    const url = `${this.apiUrl}/${id}`;
+    return this.http.get<SmallTontine>(url, this.httpOptions).pipe(
       catchError(this.handleError)
     );
   }
 
-  /**
-   * Crée une nouvelle petite tontine
-   */
-  createSmallTontine(tontine: SmallTontine): Observable<SmallTontine> {
-    return this.http.post<SmallTontine>(this.apiUrl, tontine).pipe(
-      map(tontine => this.convertDates([tontine])[0]),
+  // Créer une nouvelle small tontine
+  openSmallTontine(smallTontine: Partial<SmallTontine>): Observable<SmallTontine> {
+    return this.http.post<SmallTontine>(this.apiUrl, smallTontine, this.httpOptions).pipe(
       catchError(this.handleError)
     );
   }
 
-  /**
-   * Met à jour une petite tontine existante
-   */
-  updateSmallTontine(id: number, tontine: SmallTontine): Observable<SmallTontine> {
-    return this.http.put<SmallTontine>(`${this.apiUrl}/${id}`, tontine).pipe(
-      map(tontine => this.convertDates([tontine])[0]),
+  // Mettre à jour une small tontine
+  updateSmallTontine(smallTontine: SmallTontine): Observable<SmallTontine> {
+    return this.http.put<SmallTontine>(this.apiUrl, smallTontine, this.httpOptions).pipe(
       catchError(this.handleError)
     );
   }
 
-  /**
-   * Supprime une petite tontine
-   */
-  deleteSmallTontine(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(
+  // Supprimer une small tontine
+  deleteSmallTontine(smallTontine: SmallTontine): Observable<boolean> {
+    return this.http.delete<boolean>(this.apiUrl, {
+      ...this.httpOptions,
+      body: smallTontine
+    }).pipe(
       catchError(this.handleError)
     );
   }
 
-  /**
-   * Enregistre une cotisation pour une petite tontine
-   */
-  saveContribution(tontineId: number, contribution: Contribution): Observable<Contribution> {
-    return this.http.post<Contribution>(`${this.apiUrl}/${tontineId}/contributions`, contribution).pipe(
-      map(contribution => ({
-        ...contribution,
-        date: new Date(contribution.date)
-      })),
+  // Ajouter un membre à une small tontine
+  addMemberToSmallTontine(smallTontineId: number, memberId: number): Observable<SmallTontine> {
+    const url = `${this.apiUrl}/${smallTontineId}/members/${memberId}`;
+    return this.http.post<SmallTontine>(url, {}, this.httpOptions).pipe(
       catchError(this.handleError)
     );
   }
 
-  /**
-   * Récupère les cotisations d'une petite tontine
-   */
-  getContributions(tontineId: number): Observable<Contribution[]> {
-    return this.http.get<Contribution[]>(`${this.apiUrl}/${tontineId}/contributions`).pipe(
-      map(contributions => contributions.map(contribution => ({
-        ...contribution,
-        date: new Date(contribution.date)
-      }))),
+  // Retirer un membre d'une small tontine
+  removeMemberFromSmallTontine(smallTontineId: number, memberId: number): Observable<SmallTontine> {
+    const url = `${this.apiUrl}/${smallTontineId}/members/${memberId}`;
+    return this.http.delete<SmallTontine>(url, this.httpOptions).pipe(
       catchError(this.handleError)
     );
   }
 
-  /**
-   * Convertit les chaînes de date en objets Date
-   */
-  private convertDates(tontines: SmallTontine[]): SmallTontine[] {
-    return tontines.map(tontine => ({
-      ...tontine,
-      startDate: new Date(tontine.startDate),
-      endDate: new Date(tontine.endDate)
-    }));
-  }
-
-  /**
-   * Gère les erreurs HTTP
-   */
   private handleError(error: HttpErrorResponse) {
     let errorMessage = 'Une erreur est survenue';
 
     if (error.error instanceof ErrorEvent) {
-      // Erreur client-side
+      // Erreur côté client
       errorMessage = `Erreur: ${error.error.message}`;
     } else {
-      // Erreur backend
+      // Erreur côté serveur
       switch (error.status) {
-        case 400:
-          errorMessage = 'Données invalides';
-          break;
         case 404:
-          errorMessage = 'Tontine non trouvée';
+          errorMessage = 'Ressource non trouvée';
           break;
-        case 500:
-          errorMessage = 'Erreur serveur';
+        case 400:
+          errorMessage = 'Requête invalide';
           break;
+        case 401:
+          errorMessage = 'Non autorisé';
+          break;
+        case 403:
+          errorMessage = 'Accès refusé';
+          break;
+        default:
+          errorMessage = `Code d'erreur: ${error.status}, Message: ${error.message}`;
       }
     }
 
-    console.error('Erreur dans SmallTontineService:', error);
+    console.error(errorMessage);
     return throwError(() => new Error(errorMessage));
   }
 }

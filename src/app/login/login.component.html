@@ -24,7 +24,7 @@
         <input
           type="text"
           id="username"
-          formControlName="username"
+          formControlName="userName"
           placeholder="Entrez votre nom"
           [class.is-invalid]="loginForm.get('username')?.invalid && loginForm.get('username')?.touched">
         <div *ngIf="loginForm.get('username')?.invalid && loginForm.get('username')?.touched" class="text-danger">

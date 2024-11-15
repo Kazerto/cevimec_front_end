@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
-import { Router } from '@angular/router'; // Importer Router
-import { UserService } from '../auth/user.service'; // Importer UserService
+import { Router } from '@angular/router';
+import { AppUserService } from '../services/app-user.service';  // Assure-toi que tu importes bien le bon service
 
 @Component({
   selector: 'app-login',
@@ -9,57 +9,62 @@ import { UserService } from '../auth/user.service'; // Importer UserService
   styleUrls: ['./login.component.css']
 })
 export class LoginComponent implements OnInit {
+
   loginForm!: FormGroup;
+  loading = false;
+  submitted = false;
+  error = '';
 
   constructor(
     private formBuilder: FormBuilder,
     private router: Router,
-    private userService: UserService
+    private appUserService: AppUserService
   ) {}
 
-  ngOnInit() {
+  ngOnInit(): void {
     this.loginForm = this.formBuilder.group({
-      username: ['', [Validators.required]],
+      userName: ['', [Validators.required]],
       password: ['', [Validators.required]]
     });
-    console.log(this.loginForm);
   }
 
   onSubmit(): void {
     if (this.loginForm.valid) {
-      const username = this.loginForm.get('username')?.value;
+      const username = this.loginForm.get('userName')?.value;
       const password = this.loginForm.get('password')?.value;
 
-      // Simuler la récupération du rôle après authentification
-      const role = this.getRoleBasedOnCredentials(username, password);
-
-      // Stocker le rôle dans le UserService
-      this.userService.setRole(role);
-
-      // Rediriger l'utilisateur en fonction du rôle
-      if (role === 'admin') {
-        this.router.navigate(['/dashboard']);
-      } else if (role === 'president') {
-        this.router.navigate(['/dashboard']);
-      } else if (role === 'secretary') {
-        this.router.navigate(['/members']);
-      } else {
-        console.log('Rôle non reconnu');
+      // Appeler le service pour envoyer les identifiants au backend
+      // stop here if form is invalid
+      if (this.loginForm.invalid) {
+        return;
       }
-    } else {
-      console.log('Formulaire invalide');
-    }
-  }
 
-  getRoleBasedOnCredentials(username: string, password: string): string {
-    if (username === 'admin' && password === 'admin123') {
-      return 'admin';
-    } else if (username === 'president' && password === '1234') {
-      return 'president';
-    } else if (username === 'secretary' && password === '1234') {
-      return 'secretary';
-    } else {
-      return '';
+      this.loading = true;
+      this.appUserService.login(this.loginForm.value)
+        .subscribe({
+          next: (response) => {
+            // Redirection basée sur le rôle
+            this.appUserService.setRole(response.role); // Ajout de cette ligne !
+            switch(response.role) {
+              case 'ADMINISTRATOR':
+                this.router.navigate(['/dashboard']);
+                break;
+              case 'PRESIDENT':
+                this.router.navigate(['/dashboard']);
+                break;
+              case 'GENERAL_SECRETARY':
+                this.router.navigate(['/dashboard']);
+                break;
+              default:
+                this.router.navigate(['/dashboard']);
+            }
+          },
+          error: error => {
+            this.error = 'Nom d\'utilisateur ou mot de passe incorrect';
+            this.loading = false;
+          }
+        });
+
     }
   }
-}
+  }

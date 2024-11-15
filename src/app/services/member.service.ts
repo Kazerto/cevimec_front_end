@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams, HttpErrorResponse } from '@angular/common/http';
+import {HttpClient, HttpParams, HttpErrorResponse, HttpHeaders} from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { Member, AccountStatus } from '../models/member.model';
@@ -11,11 +11,16 @@ import { environment } from '../../environments/environment';
 export class MemberService {
   private apiUrl = `${environment.apiUrl}/members`;
 
+  private httpOptions = {
+    headers: new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    })
+  };
+
   constructor(private http: HttpClient) {}
 
-  /**
-   * Récupère tous les membres
-   */
+
   getAllMembers(): Observable<Member[]> {
     return this.http.get<Member[]>(this.apiUrl).pipe(
       map(members => this.convertDates(members)),
@@ -23,9 +28,7 @@ export class MemberService {
     );
   }
 
-  /**
-   * Récupère les membres par statut
-   */
+
   getMembersByStatus(status: AccountStatus): Observable<Member[]> {
     return this.http.get<Member[]>(`${this.apiUrl}/status/${status}`).pipe(
       map(members => this.convertDates(members)),
@@ -33,9 +36,7 @@ export class MemberService {
     );
   }
 
-  /**
-   * Récupère un membre par son ID
-   */
+
   getMemberById(id: number): Observable<Member> {
     return this.http.get<Member>(`${this.apiUrl}/${id}`).pipe(
       map(member => this.convertDates([member])[0]),
@@ -43,9 +44,7 @@ export class MemberService {
     );
   }
 
-  /**
-   * Crée un nouveau membre
-   */
+
   createMember(member: Member): Observable<Member> {
     return this.http.post<Member>(this.apiUrl, member).pipe(
       map(member => this.convertDates([member])[0]),
@@ -53,9 +52,7 @@ export class MemberService {
     );
   }
 
-  /**
-   * Met à jour un membre existant
-   */
+
   updateMember(id: number, member: Member): Observable<Member> {
     return this.http.put<Member>(`${this.apiUrl}/${id}`, member).pipe(
       map(member => this.convertDates([member])[0]),
@@ -63,9 +60,7 @@ export class MemberService {
     );
   }
 
-  /**
-   * Met à jour le statut d'un membre
-   */
+
   updateMemberStatus(id: number, status: AccountStatus): Observable<Member> {
     return this.http.patch<Member>(`${this.apiUrl}/${id}/status`, { status }).pipe(
       map(member => this.convertDates([member])[0]),
@@ -73,18 +68,14 @@ export class MemberService {
     );
   }
 
-  /**
-   * Supprime un membre
-   */
+
   deleteMember(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(
       catchError(this.handleError)
     );
   }
 
-  /**
-   * Recherche des membres
-   */
+
   searchMembers(query: string): Observable<Member[]> {
     const params = new HttpParams().set('query', query);
     return this.http.get<Member[]>(`${this.apiUrl}/search`, { params }).pipe(
@@ -93,9 +84,7 @@ export class MemberService {
     );
   }
 
-  /**
-   * Convertit les chaînes de date en objets Date
-   */
+
   private convertDates(members: Member[]): Member[] {
     return members.map(member => ({
       ...member,
@@ -104,9 +93,7 @@ export class MemberService {
     }));
   }
 
-  /**
-   * Gère les erreurs HTTP
-   */
+
   private handleError(error: HttpErrorResponse) {
     let errorMessage = 'Une erreur est survenue';
 

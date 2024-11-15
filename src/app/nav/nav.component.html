@@ -1,8 +1,8 @@
 
 <nav>
   <ul>
-    <li *ngIf="userService.getRole() === 'admin'"><a routerLink="/admin">Tableau de bord Admin</a></li>
-    <li *ngIf="userService.getRole() === 'president'"><a routerLink="/president">Gestion Président</a></li>
-    <li *ngIf="userService.getRole() === 'secretary'"><a routerLink="/membre">Espace Membre</a></li>
+    <li *ngIf="appUserService.getRole() === 'admin'"><a routerLink="/admin">Tableau de bord Admin</a></li>
+    <li *ngIf="appUserService.getRole() === 'president'"><a routerLink="/president">Gestion Président</a></li>
+    <li *ngIf="appUserService.getRole() === 'secretary'"><a routerLink="/membre">Espace Membre</a></li>
   </ul>
 </nav>

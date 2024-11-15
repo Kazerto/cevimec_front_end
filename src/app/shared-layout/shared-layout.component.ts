@@ -1,6 +1,7 @@
 import { Component, ViewChild, ElementRef, AfterViewInit, HostListener } from '@angular/core';
 import { UserService } from "../auth/user.service";
 import { Router } from '@angular/router';
+import {AppUserService} from "../services/app-user.service";
 
 @Component({
   selector: 'app-shared-layout',
@@ -10,19 +11,19 @@ import { Router } from '@angular/router';
 export class SharedLayoutComponent implements AfterViewInit {
   @ViewChild('navActions') navActions!: ElementRef;
 
-  actions: Array<any> = [
-    { title: "Tableau de bord", route: "/dashboard", icon: "📊", roles: ["admin", "president", "secretaryGeneral"] },
-    { title: "Gestion des membres", route: "/members", icon: "👥", roles: ["admin", "president", "secretaryGeneral"] },
-    { title: "Gestion des sessions", route: "/sessions", icon: "📅", roles: ["admin", "president", "secretaryGeneral"] },
-    {title: "Gestion des épargnes", route: "/savings", icon: "💰", roles: ["admin", "president", "secretaryGeneral"] },
-    {title: "Gestion des prêts", route: "/loans", icon: "📑", roles: ["admin", "president"] },
-    {title: "Gestion des tontines", route: "/tontines", icon: "🌀", roles: ["admin", "president", "secretaryGeneral"] },
-    {title: "Gestion de la petite tontine", route: "/small-tontine", icon: "🔄", roles: ["admin", "president", "secretaryGeneral"] },
-    {title: "Gestion des aides", route: "/aids", icon: "🤝", roles: ["admin", "president"] },
-    {title: "Gestion des dépenses", route: "/expenses", icon: "💵", roles: ["admin", "president", "secretaryGeneral"] },
-    {title: "Gestion des sanctions", route: "/sanctions", icon: "🌀", roles: ["admin", "president", "secretaryGeneral"] },
-    {title: "Gestion des utilisateurs", route: "/users", icon: "👥", roles: ["admin"] },
-    { title: 'Configuration', route: '/configuration', icon: '⚙️', roles: ["admin", "president", "secretaryGeneral"] },
+actions: Array<any> = [
+    { title: "Tableau de bord", route: "/dashboard", icon: "📊", roles: ["ADMINISTRATOR", "PRESIDENT","VICE_PRESIDENT", "GENERAL_SECRETARY","DEPUTY_GENERAL_SECRETARY"] },
+    { title: "Gestion des membres", route: "/members", icon: "👥", roles: ["ADMINISTRATOR", "PRESIDENT","VICE_PRESIDENT", "GENERAL_SECRETARY","DEPUTY_GENERAL_SECRETARY"] },
+    { title: "Gestion des sessions", route: "/sessions", icon: "📅", roles: ["ADMINISTRATOR", "PRESIDENT","VICE_PRESIDENT", "GENERAL_SECRETARY","DEPUTY_GENERAL_SECRETARY"] },
+    {title: "Gestion des épargnes", route: "/savings", icon: "💰", roles: ["ADMINISTRATOR", "PRESIDENT","VICE_PRESIDENT","SAVINGS_ACCOUNTS_MANAGER"] },
+    {title: "Gestion des prêts", route: "/loans", icon: "📑", roles: ["ADMINISTRATOR", "PRESIDENT","VICE_PRESIDENT","SAVINGS_ACCOUNTS_MANAGER"] },
+    {title: "Gestion des tontines", route: "/tontines", icon: "🌀", roles: ["ADMINISTRATOR", "PRESIDENT","VICE_PRESIDENT", "GENERAL_SECRETARY","DEPUTY_GENERAL_SECRETARY"] },
+    {title: "Gestion de la petite tontine", route: "/small-tontine", icon: "🔄", roles: ["ADMINISTRATOR", "PRESIDENT","VICE_PRESIDENT", "GENERAL_SECRETARY","DEPUTY_GENERAL_SECRETARY"] },
+    {title: "Gestion des aides", route: "/aids", icon: "🤝", roles: ["ADMINISTRATOR", "PRESIDENT","VICE_PRESIDENT"] },
+    {title: "Gestion des dépenses", route: "/expenses", icon: "💵", roles: ["ADMINISTRATOR", "PRESIDENT","VICE_PRESIDENT", "GENERAL_SECRETARY","DEPUTY_GENERAL_SECRETARY"] },
+    {title: "Gestion des sanctions", route: "/sanctions", icon: "🌀", roles: ["ADMINISTRATOR", "PRESIDENT","VICE_PRESIDENT", "GENERAL_SECRETARY","DEPUTY_GENERAL_SECRETARY", "CENSOR"] },
+    {title: "Gestion des utilisateurs", route: "/users", icon: "👥", roles: ["ADMINISTRATOR"] },
+    { title: 'Configuration', route: '/configuration', icon: '⚙️', roles: ["ADMINISTRATOR", "PRESIDENT","VICE_PRESIDENT", "GENERAL_SECRETARY","DEPUTY_GENERAL_SECRETARY"] },
 
 
 
@@ -32,7 +33,7 @@ export class SharedLayoutComponent implements AfterViewInit {
   canScrollLeft: boolean = false;
   canScrollRight: boolean = false;
 
-  constructor(public userService: UserService, private router: Router) {}
+  constructor(public appUserService: AppUserService, private router: Router) {}
 
   ngAfterViewInit() {
     this.checkScroll();
@@ -74,11 +75,11 @@ export class SharedLayoutComponent implements AfterViewInit {
   }
 
   getRole(): string {
-    return this.userService.getRole() ?? 'Utilisateur';
+    return this.appUserService.getRole() ?? 'Utilisateur';
   }
 
   logout(): void {
-    this.userService.logout();
+    this.appUserService.logout();
     this.router.navigate(['/login']);
   }
 

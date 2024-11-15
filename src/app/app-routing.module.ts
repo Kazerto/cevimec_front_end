@@ -23,10 +23,6 @@ import { AuthGuard } from './guard/AuthGuard';
 const routes: Routes = [
   { path: 'login', component: LoginComponent },  // Route séparée pour la page de connexion
   { path: '', redirectTo: '/login', pathMatch: 'full' },
-  { path: "admin", component: AdminComponent, canActivate: [AuthGuard], data: { roles: ['ADMIN'] }},
-  { path: "president", component: PresidentComponent, canActivate: [AuthGuard], data: { roles: ['PRESIDENT']}},
-  { path: "secretaryGeneral", component: SecretaryGeneralComponent, canActivate: [AuthGuard], data: { roles: ['SECRETAIRE_GENERAL']}},
-
 
 
   {
@@ -40,7 +36,7 @@ const routes: Routes = [
       { path: 'loans', component: LoansManagementComponent, canActivate: [AuthGuard], data: { roles: ['admin', 'president'] } },
       { path: 'small-tontine', component: SmallTontineManagementComponent, canActivate: [AuthGuard], data: { roles: ['admin', 'president', 'secretaryGeneral'] } },
       { path: 'tontines', component: TontineManagementComponent, canActivate: [AuthGuard], data: { roles: ['admin', 'president', 'secretaryGeneral'] } },
-      { path: 'savings', component: SavingsManagementComponent, canActivate: [AuthGuard], data: { roles: ['admin', 'president', 'secretaryGeneral'] } },
+      { path: 'savings', component: SavingsManagementComponent, canActivate: [AuthGuard], data: { roles: ['admin', 'president'] } },
       { path: 'aids', component: AidsManagementComponent, canActivate: [AuthGuard], data: { roles: ['admin', 'president'] } },
       { path: 'expenses', component: ExpensesManagementComponent, canActivate: [AuthGuard], data: { roles: ['admin', 'president', 'secretaryGeneral'] } },
       { path: 'users', component: UsersManagementComponent, canActivate: [AuthGuard], data: { roles: ['admin'] } },

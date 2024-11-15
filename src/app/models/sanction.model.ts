@@ -14,9 +14,28 @@ export enum SanctionType {
   BAGARRE_INJURE_DIFFAMATION = 'BAGARRE_INJURE_DIFFAMATION'
 }
 
+export const SANCTION_AMOUNTS = {
+  [SanctionType.BAVARDAGE]: 200,
+  [SanctionType.COUPE_PAROLE]: 500,
+  [SanctionType.TROUBLE]: 1000,
+  [SanctionType.ABANDON_DE_POSTE]: 2000,
+  [SanctionType.INSOLENCE]: 5000,
+  [SanctionType.PRISE_DE_PAROLE_SANS_DEMANDE]: 200,
+  [SanctionType.ENTRE_SANS_SALUTATION]: 200,
+  [SanctionType.REFUS_DE_COMMISSION]: 1000,
+  [SanctionType.SORTIES_INTEMPESTIVES]: 500,
+  [SanctionType.SONNERIE_DE_TELEPHONE]: 500,
+  [SanctionType.NON_PORT_DE_TENUE]: 2000,
+  [SanctionType.DESTRUCTION_VOLONTAIRE]: 0,
+  [SanctionType.BAGARRE_INJURE_DIFFAMATION]: 0
+};
+
 export interface Sanction {
-  id?: number;
+  id: number;
+  memberId: number; // Référence simplifiée
+  sessionId: number; // Référence simplifiée
   sanctionType: SanctionType;
+  date: Date;
   amount: number;
 }
 

@@ -216,9 +216,18 @@ export class MembersManagementComponent implements OnInit {
   editMember(member: Member) {
     this.isEditingMember = true;
     this.selectedMember = member;
-    this.memberForm.patchValue(member);
+
+    // Convertir les dates en format compatible avec l'input date
+    const formattedMember = {
+      ...member,
+      birthDate: member.birthDate ? new Date(member.birthDate).toISOString().split('T')[0] : null,
+      joinDate: member.joinDate ? new Date(member.joinDate).toISOString().split('T')[0] : null,
+    };
+
+    this.memberForm.patchValue(formattedMember);
     this.cdr.detectChanges();
   }
+
 
   viewMemberDetails(member: Member) {
     this.selectedMember = member;

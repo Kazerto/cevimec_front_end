@@ -1,15 +1,16 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
-import { Session } from '../models/session.model';
+import { Aid, AidType } from '../models/aid.model';
+
 
 @Injectable({
   providedIn: 'root'
 })
-export class SessionService {
-  private apiUrl = `${environment.apiUrl}/sessions`;
+export class AidService {
+  private apiUrl = `${environment.apiUrl}/aid`;
 
   private httpOptions = {
     headers: new HttpHeaders({
@@ -20,50 +21,41 @@ export class SessionService {
 
   constructor(private http: HttpClient) {}
 
-  getAllSessions(): Observable<Session[]> {
-    return this.http.get<Session[]>(this.apiUrl, this.httpOptions).pipe(
+  getAllAids(): Observable<Aid[]> {
+    return this.http.get<Aid[]>(this.apiUrl, this.httpOptions).pipe(
       catchError(this.handleError)
     );
   }
 
-  getSessionById(id: number): Observable<Session> {
+  getAidById(id: number): Observable<Aid> {
     const url = `${this.apiUrl}/${id}`;
-    return this.http.get<Session>(url, this.httpOptions).pipe(
+    return this.http.get<Aid>(url, this.httpOptions).pipe(
       catchError(this.handleError)
     );
   }
 
-  createSession(session: Partial<Session>): Observable<Session> {
-    return this.http.post<Session>(this.apiUrl, session, this.httpOptions).pipe(
+  getMemberAids(memberId: number): Observable<Aid[]> {
+    const url = `${this.apiUrl}/member/${memberId}`;
+    return this.http.get<Aid[]>(url, this.httpOptions).pipe(
       catchError(this.handleError)
     );
   }
 
-  updateSession(id: number, sessionDetails: Partial<Session>): Observable<Session> {
+  createAid(aid: Partial<Aid>): Observable<Aid> {
+    return this.http.post<Aid>(this.apiUrl, aid, this.httpOptions).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  updateAid(aid: Aid): Observable<Aid> {
+    return this.http.put<Aid>(this.apiUrl, aid, this.httpOptions).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  deleteAid(id: number): Observable<boolean> {
     const url = `${this.apiUrl}/${id}`;
-    return this.http.put<Session>(url, sessionDetails, this.httpOptions).pipe(
-      catchError(this.handleError)
-    );
-  }
-
-  deleteSession(id: number): Observable<void> {
-    const url = `${this.apiUrl}/${id}`;
-    return this.http.delete<void>(url, this.httpOptions).pipe(
-      catchError(this.handleError)
-    );
-  }
-
-  searchSessions(key: string): Observable<Session[]> {
-    const params = new HttpParams().set('key', key);
-    const url = `${this.apiUrl}/search`;
-    return this.http.get<Session[]>(url, { ...this.httpOptions, params }).pipe(
-      catchError(this.handleError)
-    );
-  }
-
-  addMembersToSession(sessionId: number, memberIds: number[]): Observable<void> {
-    const url = `${this.apiUrl}/${sessionId}/add-members`;
-    return this.http.post<void>(url, memberIds, this.httpOptions).pipe(
+    return this.http.delete<boolean>(url, this.httpOptions).pipe(
       catchError(this.handleError)
     );
   }

@@ -3,13 +3,13 @@ import { HttpClient, HttpParams, HttpErrorResponse, HttpHeaders } from '@angular
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
-import { Session } from '../models/session.model';
+import { Savings } from '../models/savings.model';
 
 @Injectable({
   providedIn: 'root'
 })
-export class SessionService {
-  private apiUrl = `${environment.apiUrl}/sessions`;
+export class SavingsService {
+  private apiUrl = `${environment.apiUrl}/api/savings`;
 
   private httpOptions = {
     headers: new HttpHeaders({
@@ -20,50 +20,51 @@ export class SessionService {
 
   constructor(private http: HttpClient) {}
 
-  getAllSessions(): Observable<Session[]> {
-    return this.http.get<Session[]>(this.apiUrl, this.httpOptions).pipe(
+  getAllSavings(): Observable<Savings[]> {
+    return this.http.get<Savings[]>(this.apiUrl, this.httpOptions).pipe(
       catchError(this.handleError)
     );
   }
 
-  getSessionById(id: number): Observable<Session> {
-    const url = `${this.apiUrl}/${id}`;
-    return this.http.get<Session>(url, this.httpOptions).pipe(
+  getSavingsByMemberId(id: number): Observable<Savings> {
+    const url = `${this.apiUrl}/member/${id}`;
+    return this.http.get<Savings>(url, this.httpOptions).pipe(
       catchError(this.handleError)
     );
   }
 
-  createSession(session: Partial<Session>): Observable<Session> {
-    return this.http.post<Session>(this.apiUrl, session, this.httpOptions).pipe(
+  createSavings(savings: Partial<Savings>): Observable<Savings> {
+    return this.http.post<Savings>(this.apiUrl, savings, this.httpOptions).pipe(
       catchError(this.handleError)
     );
   }
 
-  updateSession(id: number, sessionDetails: Partial<Session>): Observable<Session> {
-    const url = `${this.apiUrl}/${id}`;
-    return this.http.put<Session>(url, sessionDetails, this.httpOptions).pipe(
+  updateSavings(savings: Partial<Savings>): Observable<Savings> {
+    return this.http.put<Savings>(this.apiUrl, savings, this.httpOptions).pipe(
       catchError(this.handleError)
     );
   }
 
-  deleteSession(id: number): Observable<void> {
-    const url = `${this.apiUrl}/${id}`;
-    return this.http.delete<void>(url, this.httpOptions).pipe(
+  deleteSavings(savings: Savings): Observable<boolean> {
+    return this.http.delete<boolean>(this.apiUrl, {
+      ...this.httpOptions,
+      body: savings
+    }).pipe(
       catchError(this.handleError)
     );
   }
 
-  searchSessions(key: string): Observable<Session[]> {
-    const params = new HttpParams().set('key', key);
-    const url = `${this.apiUrl}/search`;
-    return this.http.get<Session[]>(url, { ...this.httpOptions, params }).pipe(
+  // Méthodes spécifiques pour les versements
+  addSavings(savings: Savings, amount: number): Observable<Savings> {
+    const url = `${this.apiUrl}/add`;
+    return this.http.post<Savings>(url, { savings, amount }, this.httpOptions).pipe(
       catchError(this.handleError)
     );
   }
 
-  addMembersToSession(sessionId: number, memberIds: number[]): Observable<void> {
-    const url = `${this.apiUrl}/${sessionId}/add-members`;
-    return this.http.post<void>(url, memberIds, this.httpOptions).pipe(
+  withdrawSavings(savings: Savings, amount: number): Observable<Savings> {
+    const url = `${this.apiUrl}/withdraw`;
+    return this.http.post<Savings>(url, { savings, amount }, this.httpOptions).pipe(
       catchError(this.handleError)
     );
   }

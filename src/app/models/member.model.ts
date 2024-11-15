@@ -36,7 +36,7 @@ export enum AccountStatus {
 }
 
 export interface Member {
-    id?: number;
+    id: number;
     lastName: string;
     firstName: string;
     birthDate: Date;
@@ -46,24 +46,24 @@ export interface Member {
     residencePlace: string;
     city: string;
     profession: string;
-    phoneGabon?: string;
-    poBox?: string;
+    phoneGabon: string;
+    poBox: string;
     fatherName: string;
     motherName: string;
-    villageInCameroon?: string;
-    emergencyContact?: string;
-    contactInCameroon?: string;
-    emergencyContactName?: string;
+    villageInCameroon: string;
+    emergencyContact: string;
+    contactInCameroon: string;
+    emergencyContactName: string;
     maritalStatus: MaritalStatus;
     spouseIsMember: boolean;
     spouseContact?: string;
     joinDate: Date;
-    hasReceivedFatherDeathAid: boolean;
+    hasReceivedFatherDeathAid?: boolean;
     fatherDeathAidYear?: string;
-    hasReceivedMotherDeathAid: boolean;
+    hasReceivedMotherDeathAid?: boolean;
     motherDeathAidYear?: string;
     hasResidenceCard: boolean;
-    residenceCardNumber?: string;
+    residenceCardNumber: string;
     hasConsulateCard: boolean;
     consulateCardNumber?: string;
     bloodGroup: BloodGroup;
