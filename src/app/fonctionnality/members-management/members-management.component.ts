@@ -1,44 +1,7 @@
 import {ChangeDetectorRef, Component, OnInit} from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import {MemberService} from "../../services/member.service";
-import {Member} from "../../models/member.model";
-
-enum MemberRole {
-  ADMINISTRATOR = 'ADMINISTRATOR',
-  PRESIDENT = 'PRESIDENT',
-  VICE_PRESIDENT = 'VICE_PRESIDENT',
-  GENERAL_SECRETARY = 'GENERAL_SECRETARY',
-  DEPUTY_GENERAL_SECRETARY = 'DEPUTY_GENERAL_SECRETARY',
-  TREASURER = 'TREASURER',
-  CENSOR = 'CENSOR',
-  STATUTORY_AUDITOR = 'STATUTORY_AUDITOR',
-  SAVINGS_ACCOUNTS_MANAGER = 'SAVINGS_ACCOUNTS_MANAGER'
-}
-
-enum MaritalStatus {
-  SINGLE = 'SINGLE',
-  MARRIED = 'MARRIED',
-  DIVORCED = 'DIVORCED',
-  WIDOWED = 'WIDOWED',
-  SEPARATED = 'SEPARATED'
-}
-
-enum BloodGroup {
-  A_POS = 'A_POS',
-  A_NEG = 'A_NEG',
-  B_POS = 'B_POS',
-  B_NEG = 'B_NEG',
-  AB_POS = 'AB_POS',
-  AB_NEG = 'AB_NEG',
-  O_POS = 'O_POS',
-  O_NEG = 'O_NEG'
-}
-
-enum AccountStatus {
-  ACTIVE = 'ACTIVE',
-  EXCLUDED = 'EXCLUDED',
-  DEPARTED = 'DEPARTED'
-}
+import {Member, MemberRole, AccountStatus, MaritalStatus, BloodGroup} from "../../models/member.model";
 
 
 
@@ -171,7 +134,6 @@ export class MembersManagementComponent implements OnInit {
       joinDate: [null, Validators.required],
       bloodGroup: [BloodGroup.O_POS, Validators.required],
       accountStatus: [AccountStatus.ACTIVE, Validators.required],
-      role: [MemberRole.ADMINISTRATOR, Validators.required]
     });
 
     // Souscrire aux changements du formulaire
@@ -207,7 +169,6 @@ export class MembersManagementComponent implements OnInit {
       maritalStatus: MaritalStatus.SINGLE,
       bloodGroup: BloodGroup.O_POS,
       accountStatus: AccountStatus.ACTIVE,
-      role: MemberRole.ADMINISTRATOR,
       spouseIsMember: false
     });
     this.cdr.detectChanges();
@@ -302,7 +263,6 @@ export class MembersManagementComponent implements OnInit {
       maritalStatus: MaritalStatus.SINGLE,
       bloodGroup: BloodGroup.O_POS,
       accountStatus: AccountStatus.ACTIVE,
-      role: MemberRole.ADMINISTRATOR,
       spouseIsMember: false
     });
     this.cdr.detectChanges();

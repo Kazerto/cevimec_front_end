@@ -558,20 +558,6 @@
                 </div>
               </div>
 
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Rôle</label>
-                <select class="form-select"
-                        [class.is-invalid]="memberForm.get('role')?.invalid &&
-                             (memberForm.get('role')?.dirty || memberForm.get('role')?.touched)"
-                        formControlName="role">
-                  <option *ngFor="let role of memberRoles" [value]="role">{{ role }}</option>
-                </select>
-                <div class="invalid-feedback"
-                     *ngIf="memberForm.get('role')?.invalid &&
-              (memberForm.get('role')?.dirty || memberForm.get('role')?.touched)">
-                  <div *ngIf="memberForm.get('role')?.errors?.['required']">Le rôle est requis</div>
-                </div>
-              </div>
 
             </div>
 

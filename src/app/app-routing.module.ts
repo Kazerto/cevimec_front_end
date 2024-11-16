@@ -1,7 +1,6 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { LoginComponent } from './login/login.component';
-import {SecretaryGeneralComponent} from "./secretary-general/secretary-general.component";
 import {PresidentComponent} from "./president/president.component";
 import {AdminComponent} from "./admin/admin.component";
 import {DashboardComponent} from "./fonctionnality/dashboard/dashboard.component";
@@ -18,6 +17,7 @@ import {ExpensesManagementComponent} from "./fonctionnality/expenses-management/
 //import {SanctionsManagementComponent} from "./fonctionnality/sanctions-management/sanctions-management.component";
 import {UsersManagementComponent} from "./fonctionnality/users-management/users-management.component";
 import { AuthGuard } from './guard/AuthGuard';
+import {SanctionsManagementComponent} from "./fonctionnality/sanctions-management/sanctions-management.component";
 
 
 const routes: Routes = [
@@ -40,6 +40,8 @@ const routes: Routes = [
       { path: 'aids', component: AidsManagementComponent, canActivate: [AuthGuard], data: { roles: ['admin', 'president'] } },
       { path: 'expenses', component: ExpensesManagementComponent, canActivate: [AuthGuard], data: { roles: ['admin', 'president', 'secretaryGeneral'] } },
       { path: 'users', component: UsersManagementComponent, canActivate: [AuthGuard], data: { roles: ['admin'] } },
+      { path: 'sanctions', component: SanctionsManagementComponent, canActivate: [AuthGuard], data: { roles: ['admin'] } },
+
     ]
   },
   { path: '**', redirectTo: 'login' } // Redirection par défaut vers login si aucune route ne correspond

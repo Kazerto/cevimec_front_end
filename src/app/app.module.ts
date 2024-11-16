@@ -25,9 +25,7 @@ import {DragDropModule} from "@angular/cdk/drag-drop";
 import { UsersManagementComponent } from './fonctionnality/users-management/users-management.component';
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {RouterModule} from "@angular/router";
-import { UserListComponent } from './fonctionnality/users-management/user-list/user-list.component';
-import { UserFormComponent } from './fonctionnality/users-management/user-form/user-form.component';
-
+import {SanctionsManagementComponent} from "./fonctionnality/sanctions-management/sanctions-management.component";
 
 
 @NgModule({
@@ -36,7 +34,6 @@ import { UserFormComponent } from './fonctionnality/users-management/user-form/u
     LoginComponent,
     AdminComponent,
     PresidentComponent,
-    SecretaryGeneralComponent,
     NavComponent,
     SettingsComponent,
     SessionsManagementComponent,
@@ -49,10 +46,8 @@ import { UserFormComponent } from './fonctionnality/users-management/user-form/u
     AidsManagementComponent,
     SavingsManagementComponent,
     TontineManagementComponent,
-    //SanctionsManagementComponent,
+    SanctionsManagementComponent,
     UsersManagementComponent,
-    UserListComponent,
-    UserFormComponent
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   imports: [

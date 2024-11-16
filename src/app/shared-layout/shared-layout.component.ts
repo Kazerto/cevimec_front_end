@@ -1,5 +1,4 @@
 import { Component, ViewChild, ElementRef, AfterViewInit, HostListener } from '@angular/core';
-import { UserService } from "../auth/user.service";
 import { Router } from '@angular/router';
 import {AppUserService} from "../services/app-user.service";
 

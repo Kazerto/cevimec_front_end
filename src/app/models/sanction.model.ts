@@ -32,8 +32,12 @@ export const SANCTION_AMOUNTS = {
 
 export interface Sanction {
   id: number;
-  memberId: number; // Référence simplifiée
-  sessionId: number; // Référence simplifiée
+  session: {
+    id: number;
+  };
+  member: {
+    id: number;
+  };
   sanctionType: SanctionType;
   date: Date;
   amount: number;
@@ -41,10 +45,10 @@ export interface Sanction {
 
 export interface SessionMemberSanction {
   id?: number;
-  session: any; // Nous définirons l'interface Session plus tard
-  member: any; // Nous définirons l'interface Member plus tard
+  session: any;
+  member: any;
   sanction: Sanction;
   date: Date;
   comments?: string;
-  isPaid?: boolean; // Ajouté pour correspondre au frontend
+  isPaid?: boolean;
 }
