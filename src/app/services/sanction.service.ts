@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
+import {HttpClient, HttpErrorResponse, HttpHeaders, HttpParams} from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
@@ -122,5 +122,21 @@ export class SanctionService {
 
     console.error(errorMessage);
     return throwError(() => new Error(errorMessage));
+  }
+
+  getAllSanctions(
+    page: number = 0,
+    size: number = 10,
+    sortColumn: string = 'date',
+    sortDirection: 'asc' | 'desc' = 'desc'
+  ): Observable<any> {
+    const params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString())
+      .set('sort', `${sortColumn},${sortDirection}`);
+
+    return this.http.get<any>(`${this.apiUrl}/history`, { ...this.httpOptions, params }).pipe(
+      catchError(this.handleError)
+    );
   }
 }

@@ -1,14 +1,58 @@
 <div class="container-fluid">
   <!-- Header Section -->
+  <div class="row mb-3">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <div class="row align-items-center">
+            <!-- Barre de recherche -->
+            <div class="col-md-8">
+              <div class="input-group">
+                <input
+                  type="text"
+                  class="form-control"
+                  [(ngModel)]="searchTerm"
+                  (input)="onSearchInput($event)"
+                  placeholder="Rechercher un membre (nom, prénom, téléphone...)"
+                >
+                <button
+                  class="btn btn-primary"
+                  (click)="onSearch()"
+                  [disabled]="isSearching"
+                >
+                  <i class="bi bi-search me-1"></i>
+                  {{ isSearching ? 'Recherche...' : 'Rechercher' }}
+                </button>
+                <button
+                  class="btn btn-outline-secondary"
+                  (click)="clearSearch()"
+                  *ngIf="searchTerm"
+                >
+                  <i class="bi bi-x-circle"></i>
+                  Effacer
+                </button>
+              </div>
+            </div>
+
+            <!-- Compteur de résultats -->
+            <div class="col-md-4 text-end" *ngIf="searchResults.length > 0">
+              <small class="text-muted">
+                {{ searchResults.length }} résultat(s) trouvé(s)
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
   <div class="row mb-4">
     <div class="col-12">
       <div class="card">
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-center">
-            <h4 class="card-title mb-0">Gestion des Membres</h4>
             <div class="d-flex gap-2">
               <button class="btn btn-primary" (click)="addMember()">Nouveau Membre</button>
-              <button class="btn btn-secondary">Générer Liste</button>
+              <button class="btn btn-secondary" (click)="generateMembersList()">Générer Liste</button>
             </div>
           </div>
         </div>
@@ -46,13 +90,12 @@
   <!-- Members List Table -->
   <div class="row" *ngIf="!isAddingMember && !isEditingMember && !showMemberDetails">
     <div class="col-12">
-      <div class="card">
+      <div class="card shadow">
         <div class="card-body">
-          <div class="table-responsive">
-            <table class="table">
-              <thead>
+          <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+            <table class="table table-striped align-middle">
+              <thead class="table-primary" style="position: sticky; top: 0; z-index: 1;">
               <tr>
-                <th>ID</th>
                 <th>Nom</th>
                 <th>Prénom</th>
                 <th>Profession</th>
@@ -64,16 +107,15 @@
               </thead>
               <tbody>
               <tr *ngFor="let member of members">
-                <td>{{ member.id }}</td>
                 <td>{{ member.lastName }}</td>
                 <td>{{ member.firstName }}</td>
                 <td>{{ member.profession }}</td>
                 <td>{{ member.phoneGabon }}</td>
                 <td>{{ member.bloodGroup }}</td>
                 <td>
-                    <span [class]="getStatusBadgeClass(member.accountStatus)">
-                      {{ getDisplayAccountStatus(member.accountStatus) }}
-                    </span>
+              <span [class]="getStatusBadgeClass(member.accountStatus)">
+                {{ getDisplayAccountStatus(member.accountStatus) }}
+              </span>
                 </td>
                 <td>
                   <div class="btn-group">
@@ -83,8 +125,10 @@
                     <button class="btn btn-sm btn-primary" (click)="editMember(member)">
                       <i class="bi bi-pencil"></i>
                     </button>
-                    <button class="btn btn-sm btn-danger" *ngIf="member.accountStatus === AccountStatus.ACTIVE"
-                            (click)="updateMemberStatus(member, AccountStatus.EXCLUDED)">
+                    <button
+                      class="btn btn-sm btn-danger"
+                      *ngIf="member.accountStatus === AccountStatus.ACTIVE"
+                      (click)="updateMemberStatus(member, AccountStatus.EXCLUDED)">
                       <i class="bi bi-x-circle"></i>
                     </button>
                   </div>
@@ -95,6 +139,7 @@
           </div>
         </div>
       </div>
+
     </div>
   </div>
 

@@ -14,7 +14,7 @@ export enum SanctionType {
   BAGARRE_INJURE_DIFFAMATION = 'BAGARRE_INJURE_DIFFAMATION'
 }
 
-export const SANCTION_AMOUNTS = {
+export const SANCTION_AMOUNTS: Record<SanctionType, number> = {
   [SanctionType.BAVARDAGE]: 200,
   [SanctionType.COUPE_PAROLE]: 500,
   [SanctionType.TROUBLE]: 1000,

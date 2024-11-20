@@ -23,6 +23,15 @@ export class SanctionsManagementComponent implements OnInit {
   error: string = '';
   success: string = '';
 
+  // Nouvelles propriétés pour l'historique
+  sanctionsHistory: any[] = [];
+  loadingHistory: boolean = false;
+  currentPage: number = 1;
+  pageSize: number = 10;
+  totalItems: number = 0;
+  sortColumn: string = 'date';
+  sortDirection: 'asc' | 'desc' = 'desc';
+
   constructor(
     private sanctionService: SanctionService,
     private sessionService: SessionService,
@@ -41,6 +50,8 @@ export class SanctionsManagementComponent implements OnInit {
     this.loadSessions();
     this.loadMembers();
     this.watchSanctionTypeChanges();
+    this.loadSanctionsHistory();
+
   }
 
   loadSessions() {
@@ -67,6 +78,57 @@ export class SanctionsManagementComponent implements OnInit {
       error: (error) => {
         this.error = "Erreur lors du chargement des membres";
         this.loading = false;
+      }
+    });
+  }
+
+  getMemberName(memberId: number): string {
+    const member = this.members.find(m => m.id === memberId);
+    return member ? `${member.lastName} ${member.firstName}` : 'Membre inconnu';
+  }
+
+  getSessionDate(sessionId: number): string {
+    const session = this.sessions.find(s => s.id === sessionId);
+    return session ? new Date(session.date).toLocaleDateString('fr-FR') : 'Date inconnue';
+  }
+
+  onPageChange(page: number) {
+    this.currentPage = page;
+    this.loadSanctionsHistory();
+  }
+
+  onSort(column: string) {
+    if (this.sortColumn === column) {
+      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortColumn = column;
+      this.sortDirection = 'asc';
+    }
+    this.loadSanctionsHistory();
+  }
+
+  loadSanctionsHistory() {
+    this.loadingHistory = true;
+    this.sanctionService.getAllSanctions(
+      this.currentPage - 1,
+      this.pageSize,
+      this.sortColumn,
+      this.sortDirection
+    ).subscribe({
+      next: (response: any) => {
+        this.sanctionsHistory = response.sanctions.map((sanction: any) => ({
+          ...sanction,
+          memberName: this.getMemberName(sanction.member.id),
+          sessionDate: this.getSessionDate(sanction.session.id),
+          sanctionTypeLabel: this.getSanctionTypeLabel(sanction.sanctionType),
+          formattedAmount: this.formatAmount(sanction.amount)
+        }));
+        this.totalItems = response.total;
+        this.loadingHistory = false;
+      },
+      error: (error) => {
+        this.error = "Erreur lors du chargement de l'historique des sanctions";
+        this.loadingHistory = false;
       }
     });
   }
@@ -100,6 +162,7 @@ export class SanctionsManagementComponent implements OnInit {
           this.success = "Sanction appliquée avec succès";
           this.sanctionForm.reset({ date: new Date() });
           this.loading = false;
+          this.loadSanctionsHistory(); // Recharger l'historique
         },
         error: (error) => {
           this.error = "Erreur lors de l'application de la sanction";
@@ -121,4 +184,5 @@ export class SanctionsManagementComponent implements OnInit {
     return amount.toLocaleString('fr-FR', { style: 'currency', currency: 'XAF' });
   }
 
+  protected readonly Math = Math;
 }

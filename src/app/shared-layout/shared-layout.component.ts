@@ -19,10 +19,10 @@ actions: Array<any> = [
     {title: "Gestion des tontines", route: "/tontines", icon: "🌀", roles: ["ADMINISTRATOR", "PRESIDENT","VICE_PRESIDENT", "GENERAL_SECRETARY","DEPUTY_GENERAL_SECRETARY"] },
     {title: "Gestion de la petite tontine", route: "/small-tontine", icon: "🔄", roles: ["ADMINISTRATOR", "PRESIDENT","VICE_PRESIDENT", "GENERAL_SECRETARY","DEPUTY_GENERAL_SECRETARY"] },
     {title: "Gestion des aides", route: "/aids", icon: "🤝", roles: ["ADMINISTRATOR", "PRESIDENT","VICE_PRESIDENT"] },
-    {title: "Gestion des dépenses", route: "/expenses", icon: "💵", roles: ["ADMINISTRATOR", "PRESIDENT","VICE_PRESIDENT", "GENERAL_SECRETARY","DEPUTY_GENERAL_SECRETARY"] },
+    {title: "Gestion des dépenses", route: "/expenses", icon: "💵", roles: ["ADMINISTRATOR", "PRESIDENT","VICE_PRESIDENT", "GENERAL_SECRETARY","DEPUTY_GENERAL_SECRETARY","TREASURER"] },
     {title: "Gestion des sanctions", route: "/sanctions", icon: "🌀", roles: ["ADMINISTRATOR", "PRESIDENT","VICE_PRESIDENT", "GENERAL_SECRETARY","DEPUTY_GENERAL_SECRETARY", "CENSOR"] },
     {title: "Gestion des utilisateurs", route: "/users", icon: "👥", roles: ["ADMINISTRATOR"] },
-    { title: 'Configuration', route: '/configuration', icon: '⚙️', roles: ["ADMINISTRATOR", "PRESIDENT","VICE_PRESIDENT", "GENERAL_SECRETARY","DEPUTY_GENERAL_SECRETARY"] },
+    { title: 'Configuration', route: '/settings', icon: '⚙️', roles: ["ADMINISTRATOR", "PRESIDENT","VICE_PRESIDENT", "GENERAL_SECRETARY","DEPUTY_GENERAL_SECRETARY","TREASURER", "CENSOR", "SAVINGS_ACCOUNTS_MANAGER", "STATUTORY_AUDITOR"]},
 
 
 

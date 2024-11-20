@@ -33,7 +33,7 @@ export class SessionService {
     );
   }
 
-  createSession(session: Partial<Session>): Observable<Session> {
+  createSession(session: Session): Observable<Session> {
     return this.http.post<Session>(this.apiUrl, session, this.httpOptions).pipe(
       catchError(this.handleError)
     );

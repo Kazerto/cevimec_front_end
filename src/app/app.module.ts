@@ -5,8 +5,6 @@ import { NgxChartsModule } from '@swimlane/ngx-charts';
 import { AppComponent } from './app.component';
 import { LoginComponent } from './login/login.component';
 import { AppRoutingModule } from './app-routing.module';
-import { AdminComponent } from './admin/admin.component';
-import { PresidentComponent } from './president/president.component';
 import { NavComponent } from './nav/nav.component';
 import { UserService } from './auth/user.service';
 import { SettingsComponent } from './fonctionnality/settings/settings.component';
@@ -20,20 +18,18 @@ import { TontineManagementComponent } from './fonctionnality/tontine-management/
 import { SavingsManagementComponent } from './fonctionnality/savings-management/savings-management.component';
 import { AidsManagementComponent } from './fonctionnality/aids-management/aids-management.component';
 import { ExpensesManagementComponent } from './fonctionnality/expenses-management/expenses-management.component';
-//import { SanctionsManagementComponent } from './fonctionnality/sanctions-management/sanctions-management.component';
 import {DragDropModule} from "@angular/cdk/drag-drop";
 import { UsersManagementComponent } from './fonctionnality/users-management/users-management.component';
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {RouterModule} from "@angular/router";
 import {SanctionsManagementComponent} from "./fonctionnality/sanctions-management/sanctions-management.component";
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 
 
 @NgModule({
   declarations: [
     AppComponent,
     LoginComponent,
-    AdminComponent,
-    PresidentComponent,
     NavComponent,
     SettingsComponent,
     SessionsManagementComponent,
@@ -58,7 +54,7 @@ import {SanctionsManagementComponent} from "./fonctionnality/sanctions-managemen
     NgxChartsModule,DragDropModule,
     RouterModule,
   ],
-  providers: [UserService],
+  providers: [UserService, provideAnimationsAsync()],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

@@ -1,137 +1,253 @@
+<!-- session-management.component.html -->
 <div class="container mt-4">
-  <h2>Gestion des Sessions</h2>
-
-  <!-- Loading spinner -->
-  <div *ngIf="loading" class="text-center">
-    <div class="spinner-border text-primary" role="status">
-      <span class="visually-hidden">Chargement...</span>
+  <!-- Barre de recherche et bouton de création -->
+  <div class="row mb-4">
+    <div class="col-md-8">
+      <div class="input-group">
+        <input
+          type="text"
+          class="form-control"
+          [(ngModel)]="searchTerm"
+          placeholder="Rechercher une session..."
+        >
+        <button class="btn btn-outline-secondary" (click)="onSearch()">
+          Rechercher
+        </button>
+      </div>
+    </div>
+    <div class="col-md-4 text-end">
+      <button class="btn btn-primary" (click)="showCreateForm = true" *ngIf="!showCreateForm">
+        Nouvelle Session
+      </button>
     </div>
   </div>
 
-  <!-- Error message -->
-  <div *ngIf="error" class="alert alert-danger">
-    {{ error }}
-  </div>
-
-  <!-- Planifier une session -->
-  <button class="btn btn-primary mb-3" (click)="planSession()">Planifier une session</button>
-
-  <!-- Formulaire de planification de session -->
-  <div *ngIf="showSessionForm" class="card mb-3">
+  <!-- Formulaire de création -->
+  <div class="card mb-4" *ngIf="showCreateForm">
+    <div class="card-header">
+      <h5 class="mb-0">Nouvelle Session</h5>
+    </div>
     <div class="card-body">
-      <h5 class="card-title">Planifier une nouvelle session</h5>
-      <form (ngSubmit)="saveSession()">
-        <div class="mb-3">
-          <label for="sessionDate" class="form-label">Date</label>
-          <input
-            type="date"
-            class="form-control"
-            id="sessionDate"
-            [(ngModel)]="newSession!.date"
-            name="date"
-            required>
+      <form [formGroup]="sessionForm" (ngSubmit)="onCreateSession()">
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Date</label>
+            <input type="date" class="form-control" formControlName="date">
+          </div>
+          <!-- Template HTML -->
+          <div class="form-group">
+            <label>Ajouter des membres</label>
+            <div class="member-selection border rounded p-3">
+              <div class="custom-control custom-checkbox mb-2" *ngFor="let member of members">
+                <input
+                  type="checkbox"
+                  class="custom-control-input"
+                  [id]="'member' + member.id"
+                  [checked]="isSelected(member.id)"
+                  (change)="toggleMember(member.id)"
+                >
+                <label class="custom-control-label" [for]="'member' + member.id">
+                  {{ member.firstName }} {{ member.lastName }}
+                </label>
+              </div>
+            </div>
+
+            <!-- Champ formControl caché pour la gestion du formulaire -->
+            <input type="hidden" formControlName="members">
+
+            <small class="form-text text-muted">
+              Sélectionnez un ou plusieurs membres pour cette session.
+            </small>
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Type de Session</label>
+            <input type="text" class="form-control" formControlName="sessionType">
+          </div>
         </div>
         <div class="mb-3">
-          <label for="sessionType" class="form-label">Type</label>
-          <select
-            class="form-select"
-            id="sessionType"
-            [(ngModel)]="newSession!.sessionType"
-            name="sessionType"
-            required>
-            <option value="NORMAL">Normal</option>
-            <option value="EXCEPTIONAL">Exceptionnel</option>
-          </select>
+          <label class="form-label">Agenda</label>
+          <textarea class="form-control" rows="3" formControlName="agenda"></textarea>
         </div>
-        <div class="mb-3">
-          <label for="sessionAgenda" class="form-label">Agenda</label>
-          <textarea
-            class="form-control"
-            id="sessionAgenda"
-            [(ngModel)]="newSession!.agenda"
-            name="agenda"
-            required>
-          </textarea>
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <label class="form-label">Total Petite Tontine</label>
+            <input type="number" class="form-control" formControlName="smallTontineTotal">
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="form-label">Total Sanctions</label>
+            <input type="number" class="form-control" formControlName="sanctionTotal">
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="form-label">Total Grande Tontine</label>
+            <input type="number" class="form-control" formControlName="bigTontineTotal">
+          </div>
         </div>
-        <button type="submit" class="btn btn-success">Enregistrer</button>
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Total Panier Ménager</label>
+            <input type="number" class="form-control" formControlName="householdBasketTotal">
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Total Dépenses</label>
+            <input type="number" class="form-control" formControlName="expensesTotal">
+          </div>
+        </div>
+        <div class="text-end">
+          <button type="button" class="btn btn-secondary me-2" (click)="showCreateForm = false">
+            Annuler
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="!sessionForm.valid">
+            Créer
+          </button>
+        </div>
       </form>
     </div>
   </div>
 
   <!-- Liste des sessions -->
-  <div class="table-responsive">
-    <table class="table">
-      <thead>
-      <tr>
-        <th>Date</th>
-        <th>Type</th>
-        <th>Agenda</th>
-        <th>Statut</th>
-        <th>Petite Tontine</th>
-        <th>Grande Tontine</th>
-        <th>Sanctions</th>
-        <th>Panier</th>
-        <th>Dépenses</th>
-        <th>Solde</th>
-        <th>Actions</th>
-      </tr>
-      </thead>
-      <tbody>
-      <tr *ngFor="let session of sessions">
-        <td>{{ session.date | date:'dd/MM/yyyy' }}</td>
-        <td>{{ session.sessionType }}</td>
-        <td>{{ session.agenda }}</td>
-        <td>
-            <span [class]="session.status === 'open' ? 'badge bg-success' : 'badge bg-secondary'">
-              {{ session.status }}
-            </span>
-        </td>
-        <td>{{ session.smallTontineTotal | number }} FCFA</td>
-        <td>{{ session.bigTontineTotal | number }} FCFA</td>
-        <td>{{ session.sanctionTotal | number }} FCFA</td>
-        <td>{{ session.householdBasketTotal | number }} FCFA</td>
-        <td>{{ session.expensesTotal | number }} FCFA</td>
-        <td>{{ getSessionBalance(session) | number }} FCFA</td>
-        <td>
-          <button
-            *ngIf="session.status === 'open'"
-            class="btn btn-sm btn-info me-2"
-            (click)="selectSession(session)">
-            Présences
-          </button>
-          <button
-            *ngIf="session.status === 'open'"
-            class="btn btn-sm btn-danger"
-            (click)="showClosingConfirmation = true; selectedSession = session">
-            Clôturer
-          </button>
-        </td>
-      </tr>
-      </tbody>
-    </table>
+  <div class="card">
+    <div class="card-header">
+      <h5 class="mb-0">Liste des Sessions</h5>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+          <tr>
+            <th>Date</th>
+            <th>Type</th>
+            <th>Agenda</th>
+            <th>Total Petite Tontine</th>
+            <th>Total Sanctions</th>
+            <th>Total Grande Tontine</th>
+            <th>Total Panier</th>
+            <th>Total Dépenses</th>
+            <th>Bilan</th>
+            <th>Actions</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr *ngFor="let session of sessions">
+            <td>{{ formatDate(session.date) }}</td>
+            <td>{{ session.sessionType }}</td>
+            <td>{{ session.agenda }}</td>
+            <td>{{ session.smallTontineTotal }}</td>
+            <td>{{ session.sanctionTotal }}</td>
+            <td>{{ session.bigTontineTotal }}</td>
+            <td>{{ session.householdBasketTotal }}</td>
+            <td>{{ session.expensesTotal }}</td>
+            <td>{{ calculateTotal(session) }}</td>
+            <td>
+              <div class="btn-group">
+                <button class="btn btn-sm btn-outline-primary" (click)="editSession(session)">
+                  Modifier
+                </button>
+                <button class="btn btn-sm btn-outline-danger" (click)="onDeleteSession(session.id!)">
+                  Supprimer
+                </button>
+                <button class="btn btn-sm btn-info" (click)="viewSessionDetails(session)">
+                  <i class="bi bi-eye"></i> Voir
+                </button>
+              </div>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
-
-  <!-- Modal de confirmation de clôture -->
-  <div *ngIf="showClosingConfirmation" class="modal d-block" tabindex="-1">
+  <div class="modal" [class.show]="selectedSessionDetails" [style.display]="selectedSessionDetails ? 'block' : 'none'" tabindex="-1">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">Confirmation de clôture de session</h5>
-          <button type="button" class="btn-close" (click)="showClosingConfirmation = false"></button>
+          <h5 class="modal-title">Détails de la Session</h5>
+          <button type="button" class="btn-close" (click)="closeModal()"></button>
         </div>
-        <div class="modal-body">
-          <p>Vous êtes sur le point de clôturer la session du {{ selectedSession?.date | date:'dd/MM/yyyy' }}</p>
-          <div class="alert alert-info">
-            <strong>Solde final :</strong>
-            {{ getSessionBalance(selectedSession!) | number }} FCFA
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" (click)="showClosingConfirmation = false">Annuler</button>
-          <button type="button" class="btn btn-primary" (click)="closeSession()">Confirmer la clôture</button>
+        <div class="modal-body" *ngIf="selectedSessionDetails">
+          <p><strong>Date :</strong> {{ selectedSessionDetails.date | date }}</p>
+          <p><strong>Agenda :</strong> {{ selectedSessionDetails.agenda }}</p>
+          <p><strong>Type :</strong> {{ selectedSessionDetails.sessionType }}</p>
+          <p><strong>Total petite tontine :</strong> {{ selectedSessionDetails.smallTontineTotal }}</p>
+          <p><strong>Total sanctions :</strong> {{ selectedSessionDetails.sanctionTotal }}</p>
+          <p><strong>Total grande tontine :</strong> {{ selectedSessionDetails.bigTontineTotal }}</p>
+          <p><strong>Total panier ménager :</strong> {{ selectedSessionDetails.householdBasketTotal }}</p>
+          <p><strong>Total dépenses :</strong> {{ selectedSessionDetails.expensesTotal }}</p>
+          <p><strong>Bilan :</strong> {{ calculateTotal(selectedSessionDetails) }}</p>
+          <p><strong>Membres présents :</strong></p>
+          <ul>
+            <li *ngFor="let member of selectedSessionDetails.members">
+              {{ getMemberNameById(member.id) }}
+            </li>
+          </ul>
         </div>
       </div>
     </div>
-    <div class="modal-backdrop fade show"></div>
   </div>
+  <div class="modal-backdrop fade show" *ngIf="selectedSessionDetails"></div>
+  `
+
+
+  <!-- Modal de modification -->
+  <div class="modal" [class.show]="showUpdateForm" *ngIf="showUpdateForm" tabindex="-1" style="display: block;">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Modifier la Session</h5>
+          <button type="button" class="btn-close" (click)="cancelEdit()"></button>
+        </div>
+        <div class="modal-body">
+          <form [formGroup]="sessionForm" (ngSubmit)="onUpdateSession()">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Date</label>
+                <input type="date" class="form-control" formControlName="date">
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Type de Session</label>
+                <input type="text" class="form-control" formControlName="sessionType">
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Agenda</label>
+              <textarea class="form-control" rows="3" formControlName="agenda"></textarea>
+            </div>
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Total Petite Tontine</label>
+                <input type="number" class="form-control" formControlName="smallTontineTotal">
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Total Sanctions</label>
+                <input type="number" class="form-control" formControlName="sanctionTotal">
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Total Grande Tontine</label>
+                <input type="number" class="form-control" formControlName="bigTontineTotal">
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Total Panier Ménager</label>
+                <input type="number" class="form-control" formControlName="householdBasketTotal">
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Total Dépenses</label>
+                <input type="number" class="form-control" formControlName="expensesTotal">
+              </div>
+            </div>
+            <div class="text-end">
+              <button type="button" class="btn btn-secondary me-2" (click)="cancelEdit()">
+                Annuler
+              </button>
+              <button type="submit" class="btn btn-primary" [disabled]="!sessionForm.valid">
+                Mettre à jour
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-backdrop fade show" *ngIf="showUpdateForm"></div>
 </div>

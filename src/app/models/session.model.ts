@@ -1,13 +1,18 @@
+import {Member} from "./member.model";
+
 export interface Session {
   id?: number;
   date: Date;
-  agenda: string;           // Correspond au 'title' du frontend
-  sessionType: string;      // Correspond au 'type' du frontend
-  membersPresent: number[]; // IDs des membres présents
+  agenda: string;
+  sessionType: string;
+  members: Member[];  // Changé de membersPresent: number[]
   smallTontineTotal: number;
   sanctionTotal: number;
   bigTontineTotal: number;
   householdBasketTotal: number;
   expensesTotal: number;
-  status?: 'open' | 'closed';
+  sanctions?: any[];
+  smallTontine?: any;
+  contributionSmallTontines?: any;
+  contributionTontines?: any;
 }

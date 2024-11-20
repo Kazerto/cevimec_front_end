@@ -15,6 +15,8 @@ import { environment } from '../../environments/environment';
 export class AppUserService {
   private apiUrl = `${environment.apiUrl}/users`;
   private role: string | null = null;
+  private currentUserId: number | null = null;
+
 
   private httpOptions = {
     headers: new HttpHeaders({
@@ -41,15 +43,34 @@ export class AppUserService {
   login(credentials: { userName: string; password: string }): Observable<AppUser> {
     const url = `${this.apiUrl}/login`;
     return this.http.post<AppUser>(url, credentials, this.httpOptions).pipe(
+      map(user => {
+        // Sauvegarder l'ID et le rôle dans le localStorage
+        localStorage.setItem('userId', user.id.toString());
+        localStorage.setItem('userRole', user.role);
+        this.currentUserId = user.id;
+        this.role = user.role;
+        return user;
+      }),
       catchError(this.handleError)
     );
   }
 
   // Déconnecter l'utilisateur
   logout(): void {
-    this.role = null; // Réinitialiser le rôle pour déconnecter l'utilisateur
+    this.role = null;
+    this.currentUserId = null;
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('userId');
   }
 
+
+  getCurrentUserId(): number | null {
+    if (!this.currentUserId) {
+      const storedId = localStorage.getItem('userId');
+      this.currentUserId = storedId ? parseInt(storedId, 10) : null;
+    }
+    return this.currentUserId;
+  }
 
   createUser(user: Partial<AppUser>): Observable<AppUser> {
     return this.http.post<AppUser>(this.apiUrl, user, this.httpOptions).pipe(

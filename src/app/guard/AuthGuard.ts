@@ -40,8 +40,15 @@ export class AuthGuard implements CanActivate {
     switch(role) {
       case 'ADMINISTRATOR': return 'admin';
       case 'PRESIDENT': return 'president';
-      case 'GENERAL_SECRETARY': return 'secretaryGeneral';
+      case 'VICE_PRESIDENT': return 'vicePresident';
+      case 'GENERAL_SECRETARY': return 'GeneralSecretary';
+      case 'DEPUTY_GENERAL_SECRETARY': return 'deputyGeneralSecretary';
+      case 'TREASURER': return 'treasurer';
+      case 'CENSOR': return 'censor';
+      case 'STATUTORY_AUDITOR': return 'statutoryAuditor';
+      case 'SAVINGS_ACCOUNTS_MANAGER': return 'savingsAccountsManager';
       default: return role.toLowerCase();
     }
+
   }
 }

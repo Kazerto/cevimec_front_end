@@ -1,1 +1,102 @@
-<p>settings works!</p>
+<div class="container my-5">
+  <div class="card shadow-lg">
+    <div class="card-header bg-primary text-white text-center">
+      <h4 class="mb-0">Paramètres du compte</h4>
+    </div>
+    <div class="card-body">
+      <form [formGroup]="settingsForm" (ngSubmit)="onSubmit()" class="needs-validation" novalidate>
+        <!-- Messages -->
+        <div *ngIf="successMessage" class="alert alert-success alert-dismissible fade show" role="alert">
+          {{ successMessage }}
+          <button type="button" class="btn-close" (click)="successMessage = ''"></button>
+        </div>
+        <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show" role="alert">
+          {{ errorMessage }}
+          <button type="button" class="btn-close" (click)="errorMessage = ''"></button>
+        </div>
+
+        <!-- Nom d'utilisateur -->
+        <div class="mb-3">
+          <label for="userName" class="form-label">Nom d'utilisateur</label>
+          <input
+            type="text"
+            id="userName"
+            formControlName="userName"
+            class="form-control"
+            [ngClass]="{'is-invalid': settingsForm.get('userName')?.invalid && settingsForm.get('userName')?.touched}"
+          >
+          <div class="invalid-feedback">
+            Le nom d'utilisateur est requis
+          </div>
+        </div>
+
+        <!-- Bouton pour afficher/masquer le changement de mot de passe -->
+        <div class="text-end mb-3">
+          <button
+            type="button"
+            (click)="toggleChangePassword()"
+            class="btn btn-link text-decoration-none"
+          >
+            {{ showChangePassword ? 'Annuler le changement de mot de passe' : 'Changer le mot de passe' }}
+          </button>
+        </div>
+
+        <!-- Section changement de mot de passe -->
+        <div *ngIf="showChangePassword" class="border p-3 rounded bg-light mb-4">
+          <!-- Mot de passe actuel -->
+          <div class="mb-3">
+            <label for="currentPassword" class="form-label">Mot de passe actuel</label>
+            <input
+              type="password"
+              id="currentPassword"
+              formControlName="currentPassword"
+              class="form-control"
+            >
+          </div>
+
+          <!-- Nouveau mot de passe -->
+          <div class="mb-3">
+            <label for="newPassword" class="form-label">Nouveau mot de passe</label>
+            <input
+              type="password"
+              id="newPassword"
+              formControlName="newPassword"
+              class="form-control"
+              [ngClass]="{'is-invalid': settingsForm.get('newPassword')?.errors?.['minlength'] && settingsForm.get('newPassword')?.touched}"
+            >
+            <div class="invalid-feedback">
+              Le mot de passe doit contenir au moins 6 caractères
+            </div>
+          </div>
+
+          <!-- Confirmation du nouveau mot de passe -->
+          <div class="mb-3">
+            <label for="confirmPassword" class="form-label">Confirmer le nouveau mot de passe</label>
+            <input
+              type="password"
+              id="confirmPassword"
+              formControlName="confirmPassword"
+              class="form-control"
+              [ngClass]="{'is-invalid': settingsForm.hasError('passwordMismatch') && settingsForm.get('confirmPassword')?.touched}"
+            >
+            <div class="invalid-feedback">
+              Les mots de passe ne correspondent pas
+            </div>
+          </div>
+        </div>
+
+        <!-- Bouton de soumission -->
+        <div class="d-grid">
+          <button
+            type="submit"
+            [disabled]="settingsForm.invalid || loading"
+            class="btn btn-primary btn-lg"
+          >
+            <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+            Enregistrer les modifications
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

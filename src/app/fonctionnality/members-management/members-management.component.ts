@@ -2,6 +2,7 @@ import {ChangeDetectorRef, Component, OnInit} from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import {MemberService} from "../../services/member.service";
 import {Member, MemberRole, AccountStatus, MaritalStatus, BloodGroup} from "../../models/member.model";
+import {PdfExportService} from "../../services/pdf-export-service";
 
 
 
@@ -19,6 +20,11 @@ export class MembersManagementComponent implements OnInit {
   showMemberDetails = false;
   currentTab: AccountStatus = AccountStatus.ACTIVE;
   formInitialized = false;
+  searchTerm: string = '';
+  isSearching: boolean = false;
+  searchResults: Member[] = [];
+  private searchDebouncer: ReturnType<typeof setTimeout> | null = null;
+
 
   readonly bloodGroups = Object.values(BloodGroup);
   readonly maritalStatuses = Object.values(MaritalStatus);
@@ -33,8 +39,10 @@ export class MembersManagementComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private cdr: ChangeDetectorRef,
-    private memberService: MemberService  // Ajoutez cette ligne
-  ) {
+    private memberService: MemberService,
+    private pdfExportService: PdfExportService
+
+) {
     this.memberForm = this.createMemberForm();
   }
 
@@ -66,6 +74,48 @@ export class MembersManagementComponent implements OnInit {
       this.formInitialized = true;
       this.cdr.detectChanges();
     });
+  }
+
+  onSearch(): void {
+    if (this.searchTerm.trim()) {
+      this.isSearching = true;
+      this.memberService.searchMembers(this.searchTerm).subscribe({
+        next: (results) => {
+          // Filtrer l'administrateur des résultats si nécessaire
+          this.searchResults = results.filter(member => member.role !== MemberRole.ADMINISTRATOR);
+          this.members = this.searchResults;
+          this.isSearching = false;
+          this.cdr.detectChanges();
+        },
+        error: (error) => {
+          console.error('Erreur lors de la recherche:', error);
+          this.isSearching = false;
+          this.cdr.detectChanges();
+        }
+      });
+    } else {
+      // Si le champ de recherche est vide, recharger la liste normale
+      this.searchResults = [];
+      this.loadMembers();
+    }
+  }
+
+  // Ajoutez cette méthode pour la recherche en temps réel (optionnel)
+  onSearchInput(event: any): void {
+    if (this.searchDebouncer) {
+      clearTimeout(this.searchDebouncer);
+    }
+
+    this.searchDebouncer = setTimeout(() => {
+      this.onSearch();
+    }, 300);
+  }
+
+  // Méthode pour réinitialiser la recherche
+  clearSearch(): void {
+    this.searchTerm = '';
+    this.searchResults = [];
+    this.loadMembers();
   }
 
   // Recharge les membres après le changement d'onglet
@@ -151,17 +201,29 @@ export class MembersManagementComponent implements OnInit {
   private loadMembers() {
     this.memberService.getMembersByStatus(this.currentTab).subscribe({
       next: (members) => {
-        this.members = members;
+        this.members = members.filter(member => member.id !== 1);
         this.cdr.detectChanges();
       },
       error: (error) => {
         console.error('Erreur lors du chargement des membres:', error);
-        // Gérer l'erreur
       }
     });
   }
 
 
+
+  generateMembersList() {
+    // Si vous voulez exporter uniquement les membres du tab actuel
+    this.memberService.getMembersByStatus(this.currentTab).subscribe({
+      next: (members) => {
+        this.pdfExportService.generateMembersList(members);
+      },
+      error: (error) => {
+        console.error('Erreur lors de la génération de la liste:', error);
+        // Gérer l'erreur (par exemple, afficher un message à l'utilisateur)
+      }
+    });
+  }
 
   addMember() {
     this.isAddingMember = true;

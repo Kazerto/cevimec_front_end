@@ -34,7 +34,6 @@ export class LoginComponent implements OnInit {
       const password = this.loginForm.get('password')?.value;
 
       // Appeler le service pour envoyer les identifiants au backend
-      // stop here if form is invalid
       if (this.loginForm.invalid) {
         return;
       }
@@ -52,12 +51,32 @@ export class LoginComponent implements OnInit {
               case 'PRESIDENT':
                 this.router.navigate(['/dashboard']);
                 break;
+              case 'VICE_PRESIDENT':
+                this.router.navigate(['/dashboard']);
+                break;
               case 'GENERAL_SECRETARY':
+                this.router.navigate(['/dashboard']);
+                break;
+              case 'DEPUTY_GENERAL_SECRETARY':
+                this.router.navigate(['/dashboard']);
+                break;
+              case 'TREASURER':
+                this.router.navigate(['/dashboard']);
+                break;
+              case 'CENSOR':
+                this.router.navigate(['/dashboard']);
+                break;
+              case 'STATUTORY_AUDITOR':
+                this.router.navigate(['/dashboard']);
+                break;
+              case 'SAVINGS_ACCOUNTS_MANAGER':
                 this.router.navigate(['/dashboard']);
                 break;
               default:
                 this.router.navigate(['/dashboard']);
+                break;
             }
+
           },
           error: error => {
             this.error = 'Nom d\'utilisateur ou mot de passe incorrect';
