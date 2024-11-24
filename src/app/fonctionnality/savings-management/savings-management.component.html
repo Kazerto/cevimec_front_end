@@ -1,64 +1,222 @@
-<div class="container mt-4">
-  <!-- Créer un compte épargne -->
-  <button class="btn btn-primary mb-3" (click)="createAccount()">Créer un compte épargne</button>
+<div class="container-fluid p-4">
+  <!-- Alert pour les erreurs -->
+  <div *ngIf="error" class="alert alert-danger alert-dismissible fade show" role="alert">
+    {{ error }}
+    <button type="button" class="btn-close" aria-label="Fermer l'alerte" (click)="error = ''"></button>
+  </div>
+
+  <!-- En-tête avec bouton de création -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <button class="btn btn-primary" (click)="toggleAccountForm()">Créer un compte épargne</button>
+  </div>
 
   <!-- Formulaire de création de compte -->
-  <div *ngIf="showAccountForm" class="card mb-3">
+  <div *ngIf="showAccountForm" class="card mb-4">
+    <div class="card-header">
+      <h5 class="mb-0">Nouveau compte épargne</h5>
+    </div>
     <div class="card-body">
-      <h5 class="card-title">Créer un nouveau compte épargne</h5>
-      <form (ngSubmit)="saveAccount(memberName.value)">
-        <div class="mb-3">
-          <label for="memberName" class="form-label">Nom du membre</label>
-          <input type="text" class="form-control" id="memberName" #memberName required>
+      <form [formGroup]="accountForm" (ngSubmit)="createAccount()">
+        <div class="row">
+          <!-- Sélection du membre -->
+          <div class="col-md-6 mb-3">
+            <label for="memberId" class="form-label">Membre</label>
+            <select
+              class="form-select"
+              id="memberId"
+              formControlName="memberId"
+              aria-label="Sélectionnez un membre"
+              [class.is-invalid]="accountForm.get('memberId')?.invalid && accountForm.get('memberId')?.touched"
+            >
+              <option value="">Sélectionnez un membre</option>
+              <option *ngFor="let member of members" [value]="member.id">
+                {{ member.firstName }} {{ member.lastName }}
+              </option>
+            </select>
+            <div class="invalid-feedback">Veuillez sélectionner un membre</div>
+          </div>
+
+          <!-- Solde initial -->
+          <div class="col-md-6 mb-3">
+            <label for="initialBalance" class="form-label">Solde initial</label>
+            <input
+              type="number"
+              class="form-control"
+              id="initialBalance"
+              formControlName="initialBalance"
+              aria-label="Entrez le solde initial"
+              [class.is-invalid]="accountForm.get('initialBalance')?.invalid && accountForm.get('initialBalance')?.touched"
+            />
+            <div class="invalid-feedback">Le solde initial doit être positif ou nul</div>
+          </div>
         </div>
-        <button type="submit" class="btn btn-success">Créer le compte</button>
+
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-success" [disabled]="!accountForm.valid">
+            Créer le compte
+          </button>
+          <button type="button" class="btn btn-secondary" (click)="showAccountForm = false">
+            Annuler
+          </button>
+        </div>
       </form>
     </div>
   </div>
 
   <!-- Liste des comptes épargne -->
-  <h3>Comptes Épargne</h3>
-  <table class="table">
-    <thead>
-    <tr>
-      <th>Membre</th>
-      <th>Solde</th>
-      <th>Statut</th>
-      <th>Actions</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr *ngFor="let account of savingsAccounts" [class.table-active]="selectedAccount === account">
-      <td>{{ account.memberName }}</td>
-      <td>{{ account.balance | currency:'XAF':'symbol':'1.0-0' }}</td>
-      <td>{{ account.isActive ? 'Actif' : 'Fermé' }}</td>
-      <td>
-        <button class="btn btn-sm btn-info me-2" (click)="selectAccount(account)">Sélectionner</button>
-        <button class="btn btn-sm btn-success me-2" (click)="generateStatement(account)">Générer relevé</button>
-      </td>
-    </tr>
-    </tbody>
-  </table>
-
-  <!-- Actions sur le compte sélectionné -->
-  <div *ngIf="selectedAccount" class="mt-4">
-    <h4>Compte de {{ selectedAccount.memberName }}</h4>
-    <button class="btn btn-success me-2" (click)="openTransactionForm('deposit')">Enregistrer un versement</button>
-    <button class="btn btn-warning me-2" (click)="openTransactionForm('withdrawal')">Enregistrer un retrait</button>
-    <button class="btn btn-danger" (click)="closeAccount()" [disabled]="!selectedAccount.isActive">Fermer le compte</button>
+  <div class="card">
+    <div class="card-body">
+      <div *ngIf="loading" class="d-flex justify-content-center align-items-center">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Chargement...</span>
+        </div>
+      </div>
+      <div *ngIf="!loading" class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+          <tr>
+            <th scope="col">Membre</th>
+            <th scope="col">Solde</th>
+            <th scope="col">Date de création</th>
+            <th scope="col">Dernière transaction</th>
+            <th scope="col">Statut</th>
+            <th scope="col">Actions</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr *ngIf="!savingsAccounts.length">
+            <td colspan="6" class="text-center">Aucun compte épargne disponible</td>
+          </tr>
+          <tr *ngFor="let account of savingsAccounts">
+            <td>{{ account.member?.firstName }} {{ account.member?.lastName }}</td>
+            <td>{{ account.balance | currency:'XAF':'symbol':'1.0-0' }}</td>
+            <td>{{ account.creationDate | date:'dd/MM/yyyy' }}</td>
+            <td>{{ getLastTransactionDate(account) }}</td>
+            <td>
+                <span [ngClass]="{
+                  'badge': true,
+                  'bg-success': account.status === 'ACTIF',
+                  'bg-warning': account.status === 'INACTIF',
+                  'bg-danger': account.status === 'BLOQUE'
+                }">
+                  {{ account.status | titlecase }}
+                </span>
+            </td>
+            <td>
+              <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-info" (click)="selectAccount(account)">
+                  Détails
+                </button>
+                <!-- Nouveaux boutons pour la gestion du statut -->
+                <button *ngIf="account.status === 'ACTIF'"
+                        class="btn btn-sm btn-warning"
+                        (click)="deactivateAccount(account)">
+                  Désactiver
+                </button>
+                <button *ngIf="account.status === 'INACTIF'"
+                        class="btn btn-sm btn-success"
+                        (click)="reactivateAccount(account)">
+                  Réactiver
+                </button>
+                <button *ngIf="account.status !== 'BLOQUE'"
+                        class="btn btn-sm btn-danger"
+                        (click)="blockAccount(account)">
+                  Bloquer
+                </button>
+              </div>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
-  <!-- Formulaire de transaction -->
-  <div *ngIf="showTransactionForm" class="card mt-3">
+  <!-- Détails du compte et formulaire de transaction -->
+  <div *ngIf="selectedAccount && showSavingsDetails" class="card mt-4">
+    <div class="card-header">
+      <h5 class="mb-0">
+        Compte de {{ selectedAccount.member?.firstName }} {{ selectedAccount.member?.lastName }}
+      </h5>
+    </div>
     <div class="card-body">
-      <h5 class="card-title">{{ transactionType === 'deposit' ? 'Versement' : 'Retrait' }}</h5>
-      <form (ngSubmit)="processTransaction()">
-        <div class="mb-3">
-          <label for="transactionAmount" class="form-label">Montant</label>
-          <input type="number" class="form-control" id="transactionAmount" [(ngModel)]="transactionAmount" name="transactionAmount" required>
+      <!-- Solde actuel -->
+      <div class="row mb-4">
+        <!-- Dans la section des détails du compte -->
+        <div *ngIf="selectedAccount?.status !== 'ACTIF'" class="alert alert-warning mt-3">
+          Ce compte est actuellement {{ selectedAccount?.status | lowercase }}. Certaines opérations peuvent être restreintes.
         </div>
-        <button type="submit" class="btn btn-primary">Valider</button>
-      </form>
+        <div class="col-md-4">
+          <div class="card">
+            <div class="card-body">
+              <h6 class="card-subtitle mb-2 text-muted">Solde actuel</h6>
+              <h4 class="card-title">{{ selectedAccount.balance | currency:'XAF':'symbol':'1.0-0'}}</h4>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Boutons pour les transactions -->
+      <div class="d-flex gap-2 mb-4">
+        <button
+          class="btn btn-success"
+          [disabled]="selectedAccount?.status !== 'ACTIF'"
+          (click)="transactionForm.patchValue({type: 'deposit'}); showTransactionForm = true">
+          Nouveau versement
+        </button>
+        <button
+          class="btn btn-warning"
+          [disabled]="selectedAccount?.status !== 'ACTIF'"
+          (click)="transactionForm.patchValue({type: 'withdrawal'}); showTransactionForm = true">
+          Nouveau retrait
+        </button>
+      </div>
+
+      <!-- Formulaire de transaction -->
+      <div *ngIf="showTransactionForm" class="card">
+        <div class="card-body">
+          <h5 class="card-title">
+            {{ transactionForm.get('type')?.value === 'deposit' ? 'Versement' : 'Retrait' }}
+          </h5>
+          <form [formGroup]="transactionForm" (ngSubmit)="processTransaction()">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="amount" class="form-label">Montant</label>
+                <input
+                  type="number"
+                  class="form-control"
+                  id="amount"
+                  formControlName="amount"
+                  aria-label="Entrez le montant"
+                  [class.is-invalid]="transactionForm.get('amount')?.invalid && transactionForm.get('amount')?.touched"
+                />
+                <div class="invalid-feedback">Le montant doit être supérieur à 0</div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="description" class="form-label">Description</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="description"
+                  formControlName="description"
+                  aria-label="Entrez une description"
+                  [class.is-invalid]="transactionForm.get('description')?.invalid && transactionForm.get('description')?.touched"
+                />
+                <div class="invalid-feedback">La description est requise</div>
+              </div>
+            </div>
+
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-primary" [disabled]="!transactionForm.valid">
+                Valider
+              </button>
+              <button type="button" class="btn btn-secondary" (click)="showTransactionForm = false">
+                Annuler
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
   </div>
 </div>

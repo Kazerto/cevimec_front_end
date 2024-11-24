@@ -1,8 +1,9 @@
 import {Savings} from "./savings.model";
 
 export interface Versement {
-  id: number;
+  id?: number;  // Rendre l'id optionnel en ajoutant ?
   versementDate: Date;
   versementAmount: number;
-  savings?: Savings;  // Optional to avoid circular reference issues
+  savings?: Savings;
+  savingsId?: number;  // Ajouter cette propriété
 }

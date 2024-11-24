@@ -3,13 +3,13 @@ import { HttpClient, HttpParams, HttpErrorResponse, HttpHeaders } from '@angular
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
-import { Savings } from '../models/savings.model';
+import {Savings, SavingsStatus} from '../models/savings.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class SavingsService {
-  private apiUrl = `${environment.apiUrl}/api/savings`;
+  private apiUrl = `${environment.apiUrl}/savings`;
 
   private httpOptions = {
     headers: new HttpHeaders({
@@ -33,8 +33,17 @@ export class SavingsService {
     );
   }
 
-  createSavings(savings: Partial<Savings>): Observable<Savings> {
-    return this.http.post<Savings>(this.apiUrl, savings, this.httpOptions).pipe(
+  createSavings(savingsData: any): Observable<Savings> {
+    const formattedData = {
+      balance: savingsData.balance,
+      creationDate: new Date().toISOString().split('T')[0],
+      status: SavingsStatus.ACTIF,  // Définir le status initial
+      member: {
+        id: savingsData.memberId
+      }
+    };
+
+    return this.http.post<Savings>(this.apiUrl, formattedData, this.httpOptions).pipe(
       catchError(this.handleError)
     );
   }
@@ -56,11 +65,43 @@ export class SavingsService {
 
   // Méthodes spécifiques pour les versements
   addSavings(savings: Savings, amount: number): Observable<Savings> {
-    const url = `${this.apiUrl}/add`;
-    return this.http.post<Savings>(url, { savings, amount }, this.httpOptions).pipe(
+    // Formatage des données pour le versement
+    const versementData = {
+      versementDate: new Date().toISOString(),
+      versementAmount: amount,
+      savingsId: savings.id
+    };
+
+    return this.http.post<Savings>(`${this.apiUrl}/add`, versementData, this.httpOptions).pipe(
       catchError(this.handleError)
     );
   }
+
+  getActiveSavings(): Observable<Savings[]> {
+    return this.http.get<Savings[]>(`${this.apiUrl}/active`, this.httpOptions).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+// Ajouter une méthode pour désactiver un compte
+  deactivateSavings(id: number): Observable<Savings> {
+    return this.http.patch<Savings>(`${this.apiUrl}/${id}/deactivate`, {}, this.httpOptions).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  reactivateSavings(id: number): Observable<Savings> {
+    return this.http.patch<Savings>(`${this.apiUrl}/${id}/reactivate`, {}, this.httpOptions).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  blockSavings(id: number): Observable<Savings> {
+    return this.http.patch<Savings>(`${this.apiUrl}/${id}/block`, {}).pipe(
+      catchError(this.handleError)
+    );
+  }
+
 
   withdrawSavings(savings: Savings, amount: number): Observable<Savings> {
     const url = `${this.apiUrl}/withdraw`;

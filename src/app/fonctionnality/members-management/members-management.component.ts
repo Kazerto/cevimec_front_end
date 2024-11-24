@@ -211,7 +211,6 @@ export class MembersManagementComponent implements OnInit {
   }
 
 
-
   generateMembersList() {
     // Si vous voulez exporter uniquement les membres du tab actuel
     this.memberService.getMembersByStatus(this.currentTab).subscribe({

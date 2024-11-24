@@ -1,14 +1,16 @@
 import { Component, OnInit } from '@angular/core';
+import { LoanService } from '../../services/loan.service';
+import { SavingsService } from '../../services/savings.service';
+import { Loan } from '../../models/loan.model';
+import { Member } from '../../models/member.model';
+import { Savings, SavingsStatus } from '../../models/savings.model';
 
-interface Loan {
+interface EligibleMember {
   id: number;
-  memberId: number;
-  amount: number;
-  interestRate: number;
-  startDate: Date;
-  endDate: Date;
-  status: 'active' | 'completed' | 'defaulted';
-  payments: Payment[];
+  name: string;
+  savingsBalance: number;
+  eligibleAmount: number;
+  savings: Savings;
 }
 
 interface Payment {
@@ -17,116 +19,182 @@ interface Payment {
   amount: number;
 }
 
-interface EligibleSaver {
-  id: number;
-  name: string;
-  savingsBalance: number;
-  eligibleAmount: number;
-}
-
-interface LoanWithMemberName extends Loan {
-  memberName: string;
-}
-
 @Component({
   selector: 'app-loans-management',
   templateUrl: './loans-management.component.html',
-  styleUrls: ['./loans-management.component.css']
+  styleUrls: ['./loans-management.component.scss']
 })
 export class LoansManagementComponent implements OnInit {
-  loans: LoanWithMemberName[] = [];
-  eligibleSavers: EligibleSaver[] = [];
-  selectedLoan: LoanWithMemberName | null = null;
-  newLoan: Partial<LoanWithMemberName> | null = null;
+  loans: Loan[] = [];
+  eligibleMembers: EligibleMember[] = [];
+  selectedLoan: Loan | null = null;
+  newLoan: Partial<Loan> = {
+    interestRate: 0.05, // Taux par défaut de 5%
+  };
   showLoanForm = false;
   showPaymentForm = false;
   newPayment: Partial<Payment> = {};
+  isLoading = false;
+  errorMessage = '';
 
-  constructor() { }
+  constructor(
+    private loanService: LoanService,
+    private savingsService: SavingsService
+  ) {}
 
   ngOnInit(): void {
-    this.loadMockData();
+    this.loadInitialData();
   }
 
-  loadMockData() {
-    this.eligibleSavers = [
-      { id: 1, name: 'Jean Dupont', savingsBalance: 10000, eligibleAmount: 5000 },
-      { id: 2, name: 'Marie Martin', savingsBalance: 8000, eligibleAmount: 4000 },
-    ];
+  async loadInitialData() {
+    this.isLoading = true;
+    try {
+      // Charger les prêts
+      this.loanService.getAllLoans().subscribe({
+        next: (loans) => {
+          this.loans = loans;
+          this.isLoading = false;
+        },
+        error: (error) => {
+          this.errorMessage = 'Erreur lors du chargement des prêts: ' + error.message;
+          this.isLoading = false;
+        }
+      });
 
-    this.loans = [
-      {
-        id: 1,
-        memberId: 1,
-        memberName: 'Jean Dupont',
-        amount: 5000,
-        interestRate: 5,
-        startDate: new Date('2024-01-01'),
-        endDate: new Date('2024-12-31'),
-        status: 'active',
-        payments: [
-          { id: 1, date: new Date('2024-02-01'), amount: 500 },
-          { id: 2, date: new Date('2024-03-01'), amount: 500 }
-        ]
-      },
-      // Ajoutez d'autres prêts simulés si nécessaire
-    ];
+      // Charger uniquement les comptes épargne actifs
+      this.savingsService.getActiveSavings().subscribe({
+        next: (activeSavings) => {
+          // Transformer les comptes épargne en membres éligibles
+          this.eligibleMembers = activeSavings
+            .filter(savings => savings.status === SavingsStatus.ACTIF && savings.balance > 0)
+            .map(savings => ({
+              id: savings.member?.id || 0,
+              name: savings.member?.name || '',
+              savingsBalance: savings.balance,
+              eligibleAmount: this.calculateEligibleAmount(savings.balance),
+              savings: savings
+            }));
+        },
+        error: (error) => {
+          this.errorMessage = 'Erreur lors du chargement des comptes épargne: ' + error.message;
+        }
+      });
+    } catch (error) {
+      this.errorMessage = 'Une erreur est survenue lors du chargement des données';
+      this.isLoading = false;
+    }
+  }
+
+  // Calculer le montant éligible (par exemple 50% du solde d'épargne)
+  private calculateEligibleAmount(balance: number): number {
+    return balance * 0.5; // 50% du solde d'épargne
   }
 
   registerLoan() {
     this.newLoan = {
-      id: this.loans.length + 1,
-      memberId: 0,
-      memberName: '',
+      interestRate: 0.05,
+      loanDate: new Date(),
+      member: null,
       amount: 0,
-      interestRate: 5,
-      startDate: new Date(),
-      endDate: new Date(),
-      status: 'active',
-      payments: []
     };
     this.showLoanForm = true;
   }
 
   saveLoan() {
-    if (this.newLoan && this.newLoan.memberId) {
-      const saver = this.eligibleSavers.find(s => s.id === this.newLoan!.memberId);
-      if (saver) {
-        this.newLoan.memberName = saver.name;
-        this.loans.push(this.newLoan as LoanWithMemberName);
-        this.newLoan = null;
-        this.showLoanForm = false;
-      }
+    if (!this.newLoan.member || !this.newLoan.amount) {
+      this.errorMessage = 'Veuillez remplir tous les champs obligatoires';
+      return;
     }
+
+    // Vérifier l'éligibilité
+    const eligibleMember = this.eligibleMembers.find(m => m.id === this.newLoan.member?.id);
+    if (!eligibleMember) {
+      this.errorMessage = 'Ce membre n\'a pas de compte épargne actif';
+      return;
+    }
+
+    // Vérifier le montant du prêt par rapport au solde d'épargne
+    if (this.newLoan.amount > eligibleMember.eligibleAmount) {
+      this.errorMessage = `Le montant demandé dépasse le montant éligible (maximum: ${eligibleMember.eligibleAmount} XAF)`;
+      return;
+    }
+
+    this.isLoading = true;
+    this.loanService.createLoan(this.newLoan).subscribe({
+      next: (loan) => {
+        this.loans.push(loan);
+        this.showLoanForm = false;
+        this.newLoan = { interestRate: 0.05 };
+        this.isLoading = false;
+        // Rafraîchir les données
+        this.loadInitialData();
+      },
+      error: (error) => {
+        this.errorMessage = 'Erreur lors de la création du prêt: ' + error.message;
+        this.isLoading = false;
+      }
+    });
   }
 
   recordPayment(loanId: number) {
     this.selectedLoan = this.loans.find(loan => loan.id === loanId) || null;
-    this.showPaymentForm = true;
-    this.newPayment = {
-      id: this.selectedLoan?.payments.length ? this.selectedLoan.payments.length + 1 : 1,
-      date: new Date(),
-      amount: 0
-    };
-  }
-
-  savePayment() {
-    if (this.selectedLoan && this.newPayment.amount && this.newPayment.date) {
-      this.selectedLoan.payments.push(this.newPayment as Payment);
-      // Ici, vous mettriez à jour le statut du prêt, vérifieriez s'il est terminé, etc.
-      this.showPaymentForm = false;
-      this.selectedLoan = null;
-      this.newPayment = {};
+    if (this.selectedLoan) {
+      this.showPaymentForm = true;
+      this.newPayment = {
+        date: new Date(),
+        amount: 0
+      };
     }
   }
 
-  printReceipt(payment: Payment) {
-    console.log('Printing receipt for payment:', payment);
-    // Implement receipt printing logic here
+  savePayment() {
+    if (!this.selectedLoan || !this.newPayment.amount) {
+      this.errorMessage = 'Veuillez remplir tous les champs du paiement';
+      return;
+    }
+
+    // Vérifier que le paiement ne dépasse pas le montant restant dû
+    const remainingAmount = this.calculateRemainingAmount(this.selectedLoan);
+    if (this.newPayment.amount > remainingAmount) {
+      this.errorMessage = 'Le montant du paiement dépasse le montant restant dû';
+      return;
+    }
+
+    this.isLoading = true;
+    this.loanService.recordPayment(this.selectedLoan.id, this.newPayment).subscribe({
+      next: (updatedLoan) => {
+        const index = this.loans.findIndex(l => l.id === this.selectedLoan?.id);
+        if (index !== -1) {
+          this.loans[index] = updatedLoan;
+        }
+        this.showPaymentForm = false;
+        this.selectedLoan = null;
+        this.newPayment = {};
+        this.isLoading = false;
+      },
+      error: (error) => {
+        this.errorMessage = 'Erreur lors de l\'enregistrement du paiement: ' + error.message;
+        this.isLoading = false;
+      }
+    });
+  }
+
+  calculateRemainingAmount(loan: Loan): number {
+    const totalPaid = loan.payments?.reduce((sum, payment) => sum + payment.amount, 0) || 0;
+    return loan.totalRepayment - totalPaid;
   }
 
   generateLoanReport() {
-    console.log('Generating loan report');
-    // Implement report generation logic here
+    this.isLoading = true;
+    this.loanService.generateReport().subscribe({
+      next: (reportData) => {
+        console.log('Rapport généré:', reportData);
+        this.isLoading = false;
+      },
+      error: (error) => {
+        this.errorMessage = 'Erreur lors de la génération du rapport: ' + error.message;
+        this.isLoading = false;
+      }
+    });
   }
 }

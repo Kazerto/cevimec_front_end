@@ -5,7 +5,7 @@ export interface Loan {
   member: Member;
   amount: number;
   interestRate: number;
-  loanDate: Date;
-  repaymentDate: Date;
+  loanDate: string | Date;  // Permettre les deux formats
+  repaymentDate?: string | Date | null;
   totalRepayment: number;
 }
