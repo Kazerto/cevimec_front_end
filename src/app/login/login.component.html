@@ -1,7 +1,6 @@
 <div class="login-container">
   <div class="header">
     <div class="welcome-section">
-      <!-- Logo principal déplacé au-dessus du texte -->
       <img src="assets/images/Bienvenu.png" alt="Logo" class="main-logo">
       <div class="logo-text">
         <p class="association-text">DE L'ASSOCIATION <span>CEVIMEC</span></p>
@@ -19,6 +18,11 @@
   <div class="login-box">
     <h2>CONNEXION</h2>
     <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+      <!-- Message d'erreur -->
+      <div *ngIf="error" class="alert alert-danger">
+        {{ error }}
+      </div>
+
       <div class="form-group">
         <label for="username">Nom d'utilisateur</label>
         <input
@@ -41,10 +45,13 @@
           placeholder="Entrez votre mot de passe">
       </div>
 
-      <button type="submit" class="submit-btn">Se connecter</button>
+      <button type="submit" class="submit-btn" [disabled]="loading">
+        <span *ngIf="!loading">Se connecter</span>
+        <span *ngIf="loading" class="spinner-border" role="status" aria-hidden="true"></span>
+      </button>
 
       <div class="forgot-password">
-        <a href="#">Mot de passe oublié?</a>
+        <a href="javascript:void(0)" (click)="openForgotPasswordModal()">Mot de passe oublié?</a>
       </div>
     </form>
   </div>
@@ -52,4 +59,25 @@
 
 <div class="footer">
   © Copyright Août-2024. Tous droits réservés.
+</div>
+
+<!-- Modal -->
+<div class="modal" tabindex="-1" role="dialog" id="forgotPasswordModal">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Mot de passe oublié</h5>
+        <button type="button" class="close" aria-label="Close" (click)="closeForgotPasswordModal()">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>Veuillez contacter l'administrateur au numéro : <strong>+241 074874911</strong></p>
+        <p>ou par e-mail à : <strong>seoneassita2209&#64;gmail.com</strong></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" (click)="closeForgotPasswordModal()">OK</button>
+      </div>
+    </div>
+  </div>
 </div>

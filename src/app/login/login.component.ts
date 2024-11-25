@@ -9,10 +9,8 @@ import { AppUserService } from '../services/app-user.service';  // Assure-toi qu
   styleUrls: ['./login.component.css']
 })
 export class LoginComponent implements OnInit {
-
   loginForm!: FormGroup;
   loading = false;
-  submitted = false;
   error = '';
 
   constructor(
@@ -30,60 +28,49 @@ export class LoginComponent implements OnInit {
 
   onSubmit(): void {
     if (this.loginForm.valid) {
-      const username = this.loginForm.get('userName')?.value;
-      const password = this.loginForm.get('password')?.value;
-
-      // Appeler le service pour envoyer les identifiants au backend
-      if (this.loginForm.invalid) {
-        return;
-      }
-
       this.loading = true;
-      this.appUserService.login(this.loginForm.value)
-        .subscribe({
-          next: (response) => {
-            // Redirection basée sur le rôle
-            this.appUserService.setRole(response.role); // Ajout de cette ligne !
-            switch(response.role) {
-              case 'ADMINISTRATOR':
-                this.router.navigate(['/dashboard']);
-                break;
-              case 'PRESIDENT':
-                this.router.navigate(['/dashboard']);
-                break;
-              case 'VICE_PRESIDENT':
-                this.router.navigate(['/dashboard']);
-                break;
-              case 'GENERAL_SECRETARY':
-                this.router.navigate(['/dashboard']);
-                break;
-              case 'DEPUTY_GENERAL_SECRETARY':
-                this.router.navigate(['/dashboard']);
-                break;
-              case 'TREASURER':
-                this.router.navigate(['/dashboard']);
-                break;
-              case 'CENSOR':
-                this.router.navigate(['/dashboard']);
-                break;
-              case 'STATUTORY_AUDITOR':
-                this.router.navigate(['/dashboard']);
-                break;
-              case 'SAVINGS_ACCOUNTS_MANAGER':
-                this.router.navigate(['/dashboard']);
-                break;
-              default:
-                this.router.navigate(['/dashboard']);
-                break;
-            }
+      this.error = ''; // Réinitialiser l'erreur
 
-          },
-          error: error => {
-            this.error = 'Nom d\'utilisateur ou mot de passe incorrect';
-            this.loading = false;
+      this.appUserService.login(this.loginForm.value).subscribe({
+        next: (response) => {
+          this.loading = false;
+          // Redirection basée sur le rôle
+          switch (response.role) {
+            case 'ADMINISTRATOR':
+            case 'PRESIDENT':
+            case 'VICE_PRESIDENT':
+            case 'GENERAL_SECRETARY':
+            case 'DEPUTY_GENERAL_SECRETARY':
+            case 'TREASURER':
+            case 'CENSOR':
+            case 'STATUTORY_AUDITOR':
+            case 'SAVINGS_ACCOUNTS_MANAGER':
+              this.router.navigate(['/dashboard']);
+              break;
+            default:
+              this.router.navigate(['/dashboard']);
+              break;
           }
-        });
-
+        },
+        error: () => {
+          this.error = 'Nom d\'utilisateur ou mot de passe incorrect'; // Message d'erreur
+          this.loading = false;
+        }
+      });
     }
   }
+
+  openForgotPasswordModal(): void {
+    const modal = document.getElementById('forgotPasswordModal');
+    if (modal) {
+      modal.style.display = 'block';
+    }
   }
+
+  closeForgotPasswordModal(): void {
+    const modal = document.getElementById('forgotPasswordModal');
+    if (modal) {
+      modal.style.display = 'none';
+    }
+  }
+}
