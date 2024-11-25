@@ -1,99 +1,94 @@
 <div class="container-fluid p-4">
   <!-- Loading Spinner -->
-  <div *ngIf="isLoading" class="position-fixed top-50 start-50 translate-middle">
+  <div *ngIf="isLoading" class="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" style="background: rgba(255,255,255,0.8); z-index: 1000;">
     <div class="spinner-border text-primary" role="status">
       <span class="visually-hidden">Chargement...</span>
     </div>
   </div>
 
-  <!-- Error Message -->
+  <!-- Error Alert -->
   <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show" role="alert">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>
     {{ errorMessage }}
-    <button type="button" class="btn-close" (click)="errorMessage = ''"></button>
+    <button type="button" class="btn-close" (click)="closeError()"></button>
   </div>
 
   <!-- Header Section -->
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="mb-0">Gestion des Prêts</h2>
-    <div class="d-flex gap-2">
-      <button class="btn btn-primary" (click)="registerLoan()">
-        <i class="bi bi-plus-circle me-2"></i>Nouveau Prêt
-      </button>
-      <button class="btn btn-secondary" (click)="generateLoanReport()">
-        <i class="bi bi-file-earmark-text me-2"></i>Générer Rapport
-      </button>
+    <div>
+      <p class="text-muted">Gérez les prêts et leurs remboursements</p>
     </div>
+    <button class="btn btn-primary" (click)="showLoanForm = true">
+      <i class="bi bi-plus-circle me-2"></i>Nouveau Prêt
+    </button>
   </div>
 
-  <!-- Loan Registration Form -->
+  <!-- Loan Form Card -->
   <div *ngIf="showLoanForm" class="card shadow-sm mb-4">
     <div class="card-header bg-primary text-white">
       <h5 class="card-title mb-0">Nouveau Prêt</h5>
     </div>
     <div class="card-body">
-      <form (ngSubmit)="saveLoan()" #loanForm="ngForm">
+      <form [formGroup]="loanForm" (ngSubmit)="createLoan()">
         <div class="row g-3">
           <div class="col-md-6">
-            <label for="member" class="form-label">Membre</label>
+            <label for="memberId" class="form-label">Membre</label>
             <select
               class="form-select"
-              id="member"
-              [(ngModel)]="newLoan.member"
-              name="member"
-              required>
+              id="memberId"
+              formControlName="memberId"
+              [class.is-invalid]="loanForm.get('memberId')?.touched && loanForm.get('memberId')?.invalid">
               <option [ngValue]="null">Sélectionner un membre</option>
-              <option *ngFor="let member of eligibleMembers" [ngValue]="member">
-                {{ member.name }} - Eligible: {{ member.eligibleAmount | currency:'XAF' }}
+              <option *ngFor="let member of eligibleMembers" [ngValue]="member.id">
+                {{ member.lastName }}
               </option>
             </select>
+            <div class="invalid-feedback" *ngIf="loanForm.get('memberId')?.touched && loanForm.get('memberId')?.invalid">
+              Veuillez sélectionner un membre
+            </div>
           </div>
 
           <div class="col-md-6">
             <label for="amount" class="form-label">Montant</label>
             <div class="input-group">
               <span class="input-group-text">XAF</span>
-              <input
-                type="number"
-                class="form-control"
-                id="amount"
-                [(ngModel)]="newLoan.amount"
-                name="amount"
-                required>
+              <input type="number" class="form-control" id="amount" formControlName="amount">
+            </div>
+            <div class="invalid-feedback" *ngIf="loanForm.get('amount')?.touched && loanForm.get('amount')?.invalid">
+              Le montant doit être supérieur à 0
             </div>
           </div>
 
           <div class="col-md-6">
             <label for="interestRate" class="form-label">Taux d'intérêt (%)</label>
-            <input
-              type="number"
-              class="form-control"
-              id="interestRate"
-              [(ngModel)]="newLoan.interestRate"
-              name="interestRate"
-              required>
+            <input type="number" class="form-control" id="interestRate" formControlName="interestRate">
+            <div class="invalid-feedback" *ngIf="loanForm.get('interestRate')?.touched && loanForm.get('interestRate')?.invalid">
+              Le taux doit être entre 0 et 100
+            </div>
           </div>
 
           <div class="col-md-6">
-            <label for="repaymentDate" class="form-label">Date de remboursement</label>
-            <input
-              type="date"
-              class="form-control"
-              id="repaymentDate"
-              [(ngModel)]="newLoan.repaymentDate"
-              name="repaymentDate"
-              required>
+            <label for="dueDate" class="form-label">Date d'échéance</label>
+            <input type="date" class="form-control" id="dueDate" formControlName="dueDate">
+            <div class="invalid-feedback" *ngIf="loanForm.get('dueDate')?.touched && loanForm.get('dueDate')?.invalid">
+              La date d'échéance est requise
+            </div>
           </div>
         </div>
 
         <div class="d-flex gap-2 justify-content-end mt-4">
-          <button type="button" class="btn btn-light" (click)="showLoanForm = false">Annuler</button>
-          <button type="submit" class="btn btn-primary" [disabled]="!loanForm.form.valid">Enregistrer</button>
+          <button type="button" class="btn btn-light" (click)="showLoanForm = false">
+            Annuler
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="!loanForm.valid">
+            Enregistrer le prêt
+          </button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- Loans Table -->
+  <!-- Loans Table Card -->
   <div class="card shadow-sm">
     <div class="card-body">
       <div class="table-responsive">
@@ -104,34 +99,30 @@
             <th>Membre</th>
             <th>Montant</th>
             <th>Intérêt</th>
-            <th>Date du prêt</th>
-            <th>Échéance</th>
+            <th>Date d'échéance</th>
             <th>Reste à payer</th>
-            <th>État</th>
+            <th>Statut</th>
             <th>Actions</th>
           </tr>
           </thead>
           <tbody>
           <tr *ngFor="let loan of loans">
             <td>{{ loan.id }}</td>
-            <td>{{ loan.member?.name }}</td>
-            <td>{{ loan.amount | currency:'XAF' }}</td>
-            <td>{{ loan.interestRate | percent }}</td>
-            <td>{{ loan.loanDate | date:'dd/MM/yyyy' }}</td>
-            <td>{{ loan.repaymentDate | date:'dd/MM/yyyy' }}</td>
-            <td>{{ calculateRemainingAmount(loan) | currency:'XAF' }}</td>
+            <td>{{ loan.member?.lastName }}</td>
+            <td>{{ loan.amount | currency:'XAF':'symbol':'1.0-0' }}</td>
+            <td>{{ loan.interestRate | percent:'1.0-1' }}</td>
+            <td>{{ loan.dueDate | date:'dd/MM/yyyy' }}</td>
+            <td>{{ calculateRemainingAmount(loan) | currency:'XAF':'symbol':'1.0-0' }}</td>
             <td>
-                <span [class]="'badge ' + (loan.status === 'active' ? 'bg-success' :
-                                         loan.status === 'completed' ? 'bg-primary' : 'bg-danger')">
+                <span [class]="'badge ' + getLoanStatusClass(loan)">
                   {{ loan.status }}
                 </span>
             </td>
             <td>
-              <div class="d-flex gap-2">
-                <button class="btn btn-sm btn-info" (click)="recordPayment(loan.id)">
-                  <i class="bi bi-cash me-1"></i>Paiement
-                </button>
-              </div>
+              <button class="btn btn-sm btn-info" (click)="selectLoan(loan)"
+                      [disabled]="loan.status === 'COMPLETED'">
+                <i class="bi bi-cash me-1"></i>Remboursement
+              </button>
             </td>
           </tr>
           </tbody>
@@ -140,42 +131,34 @@
     </div>
   </div>
 
-  <!-- Payment Form Modal -->
-  <div *ngIf="showPaymentForm" class="modal d-block" tabindex="-1">
+  <!-- Reimbursement Modal -->
+  <div class="modal" [class.show]="showReimbursementForm" [style.display]="showReimbursementForm ? 'block' : 'none'" tabindex="-1">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">Enregistrer un paiement</h5>
-          <button type="button" class="btn-close" (click)="showPaymentForm = false"></button>
+          <h5 class="modal-title">Enregistrer un remboursement</h5>
+          <button type="button" class="btn-close" (click)="showReimbursementForm = false"></button>
         </div>
         <div class="modal-body">
-          <form (ngSubmit)="savePayment()" #paymentForm="ngForm">
+          <form [formGroup]="reimbursementForm" (ngSubmit)="createReimbursement()">
             <div class="mb-3">
-              <label for="paymentAmount" class="form-label">Montant</label>
+              <label for="reimbursementAmount" class="form-label">Montant du remboursement</label>
               <div class="input-group">
                 <span class="input-group-text">XAF</span>
-                <input
-                  type="number"
-                  class="form-control"
-                  id="paymentAmount"
-                  [(ngModel)]="newPayment.amount"
-                  name="amount"
-                  required>
+                <input type="number" class="form-control" id="reimbursementAmount"
+                       formControlName="reimbursementAmount">
               </div>
             </div>
             <div class="mb-3">
-              <label for="paymentDate" class="form-label">Date</label>
-              <input
-                type="date"
-                class="form-control"
-                id="paymentDate"
-                [(ngModel)]="newPayment.date"
-                name="date"
-                required>
+              <label for="reimbursementDate" class="form-label">Date du remboursement</label>
+              <input type="date" class="form-control" id="reimbursementDate"
+                     formControlName="reimbursementDate">
             </div>
             <div class="d-flex justify-content-end gap-2">
-              <button type="button" class="btn btn-light" (click)="showPaymentForm = false">Annuler</button>
-              <button type="submit" class="btn btn-primary" [disabled]="!paymentForm.form.valid">
+              <button type="button" class="btn btn-light" (click)="showReimbursementForm = false">
+                Annuler
+              </button>
+              <button type="submit" class="btn btn-primary" [disabled]="!reimbursementForm.valid">
                 Enregistrer
               </button>
             </div>
@@ -184,5 +167,6 @@
       </div>
     </div>
   </div>
-  <div *ngIf="showPaymentForm" class="modal-backdrop fade show"></div>
+  <div class="modal-backdrop fade" [class.show]="showReimbursementForm"
+       *ngIf="showReimbursementForm"></div>
 </div>

@@ -1,15 +1,17 @@
+
+// reimbursement.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
-import { Loan, LoanStatus } from '../models/loan.model';
+import { Reimbursement } from '../models/reimbursement.model';
 
 @Injectable({
   providedIn: 'root'
 })
-export class LoanService {
-  private apiUrl = `${environment.apiUrl}/loan`;
+export class ReimbursementService {
+  private apiUrl = `${environment.apiUrl}/reimbursements`;
 
   private httpOptions = {
     headers: new HttpHeaders({
@@ -20,52 +22,56 @@ export class LoanService {
 
   constructor(private http: HttpClient) {}
 
-  getAllLoans(): Observable<Loan[]> {
-    return this.http.get<Loan[]>(this.apiUrl, this.httpOptions).pipe(
+  getAllReimbursements(): Observable<Reimbursement[]> {
+    return this.http.get<Reimbursement[]>(this.apiUrl, this.httpOptions).pipe(
       catchError(this.handleError)
     );
   }
 
-  getLoanById(id: number): Observable<Loan> {
-    return this.http.get<Loan>(`${this.apiUrl}/${id}`, this.httpOptions).pipe(
+  getReimbursementById(id: number): Observable<Reimbursement> {
+    return this.http.get<Reimbursement>(`${this.apiUrl}/${id}`, this.httpOptions).pipe(
       catchError(this.handleError)
     );
   }
 
-  getMemberLoans(memberId: number): Observable<Loan[]> {
-    return this.http.get<Loan[]>(`${this.apiUrl}/member/${memberId}`, this.httpOptions).pipe(
+  getLoanReimbursements(loanId: number): Observable<Reimbursement[]> {
+    return this.http.get<Reimbursement[]>(`${this.apiUrl}/loan/${loanId}`, this.httpOptions).pipe(
       catchError(this.handleError)
     );
   }
 
-  getLoansInYear(year: number): Observable<Loan[]> {
-    return this.http.get<Loan[]>(`${this.apiUrl}/year/${year}`, this.httpOptions).pipe(
-      catchError(this.handleError)
-    );
-  }
-
-  createLoan(loanData: Partial<Loan>): Observable<Loan> {
-    console.log('Service - Données reçues:', loanData);
+  createReimbursement(reimbursement: Partial<Reimbursement>): Observable<Reimbursement> {
     const formattedData = {
-      ...loanData,
-      status: LoanStatus.IN_PROGRESS,
-      loanDate: new Date().toISOString().split('T')[0]
-
+      ...reimbursement,
+      reimbursementDate: new Date().toISOString().split('T')[0]
     };
 
-    return this.http.post<Loan>(this.apiUrl, formattedData, this.httpOptions).pipe(
+    return this.http.post<Reimbursement>(this.apiUrl, formattedData, this.httpOptions).pipe(
       catchError(this.handleError)
     );
   }
 
-  updateLoan(loan: Partial<Loan>): Observable<Loan> {
-    return this.http.put<Loan>(`${this.apiUrl}/${loan.id}`, loan, this.httpOptions).pipe(
+  updateReimbursement(reimbursement: Partial<Reimbursement>): Observable<Reimbursement> {
+    return this.http.put<Reimbursement>(
+      `${this.apiUrl}/${reimbursement.id}`,
+      reimbursement,
+      this.httpOptions
+    ).pipe(
       catchError(this.handleError)
     );
   }
 
-  deleteLoan(id: number): Observable<void> {
+  deleteReimbursement(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`, this.httpOptions).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  searchReimbursements(searchKey: string): Observable<Reimbursement[]> {
+    return this.http.get<Reimbursement[]>(
+      `${this.apiUrl}/search?searchKey=${searchKey}`,
+      this.httpOptions
+    ).pipe(
       catchError(this.handleError)
     );
   }
@@ -78,7 +84,7 @@ export class LoanService {
     } else {
       switch (error.status) {
         case 404:
-          errorMessage = 'Prêt non trouvé';
+          errorMessage = 'Remboursement non trouvé';
           break;
         case 400:
           errorMessage = 'Requête invalide';

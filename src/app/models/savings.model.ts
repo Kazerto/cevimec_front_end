@@ -17,9 +17,4 @@ export interface Savings {
   versements?: Versement[];
 }
 
-export interface SavingsOperation {
-    savings: Savings;
-    amount: number;
-}
-
 

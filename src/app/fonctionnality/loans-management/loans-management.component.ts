@@ -1,200 +1,238 @@
-import { Component, OnInit } from '@angular/core';
+// loan-management.component.ts
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { LoanService } from '../../services/loan.service';
-import { SavingsService } from '../../services/savings.service';
-import { Loan } from '../../models/loan.model';
-import { Member } from '../../models/member.model';
-import { Savings, SavingsStatus } from '../../models/savings.model';
+import { ReimbursementService } from '../../services/reimbursement.service';
+import { MemberService } from '../../services/member.service';
+import { Loan, LoanStatus } from '../../models/loan.model';
+import {AccountStatus, Member} from '../../models/member.model';
+import { Reimbursement } from '../../models/reimbursement.model';
+import {SavingsStatus} from "../../models/savings.model";
+import {SavingsService} from "../../services/savings.service";
+import { forkJoin, map } from 'rxjs';
 
-interface EligibleMember {
-  id: number;
-  name: string;
-  savingsBalance: number;
-  eligibleAmount: number;
-  savings: Savings;
-}
-
-interface Payment {
-  id: number;
-  date: Date;
-  amount: number;
-}
 
 @Component({
   selector: 'app-loans-management',
   templateUrl: './loans-management.component.html',
-  styleUrls: ['./loans-management.component.scss']
+  styleUrls: ['./loans-management.component.css']
 })
 export class LoansManagementComponent implements OnInit {
   loans: Loan[] = [];
-  eligibleMembers: EligibleMember[] = [];
+  members: Member[] = [];
+  eligibleMembers: Member[] = []; // Members with active savings accounts
   selectedLoan: Loan | null = null;
-  newLoan: Partial<Loan> = {
-    interestRate: 0.05, // Taux par défaut de 5%
-  };
-  showLoanForm = false;
-  showPaymentForm = false;
-  newPayment: Partial<Payment> = {};
   isLoading = false;
   errorMessage = '';
+  showLoanForm = false;
+  showReimbursementForm = false;
+
+  // Formulaires
+  loanForm!: FormGroup;
+  reimbursementForm!: FormGroup;
 
   constructor(
+    private fb: FormBuilder,
+    private cdr: ChangeDetectorRef,
     private loanService: LoanService,
-    private savingsService: SavingsService
-  ) {}
+    private memberService: MemberService,
+    private savingsService: SavingsService,
+    private reimbursementService: ReimbursementService
+  ) {
+    this.initializeForms();
+  }
+
+  private initializeForms() {
+    this.loanForm = this.fb.group({
+      memberId: ['', Validators.required],
+      amount: [0, [Validators.required, Validators.min(1)]],
+      interestRate: [0, [Validators.required, Validators.min(0), Validators.max(100)]],
+      dueDate: ['', Validators.required]
+    });
+
+    this.reimbursementForm = this.fb.group({
+      reimbursementAmount: [0, [Validators.required, Validators.min(1)]],
+      reimbursementDate: ['', Validators.required]
+    });
+  }
 
   ngOnInit(): void {
-    this.loadInitialData();
+    this.loadEligibleMembers();
+    this.loadLoans();
   }
 
-  async loadInitialData() {
+  private loadEligibleMembers() {
     this.isLoading = true;
-    try {
-      // Charger les prêts
-      this.loanService.getAllLoans().subscribe({
-        next: (loans) => {
-          this.loans = loans;
-          this.isLoading = false;
-        },
-        error: (error) => {
-          this.errorMessage = 'Erreur lors du chargement des prêts: ' + error.message;
-          this.isLoading = false;
-        }
-      });
 
-      // Charger uniquement les comptes épargne actifs
-      this.savingsService.getActiveSavings().subscribe({
-        next: (activeSavings) => {
-          // Transformer les comptes épargne en membres éligibles
-          this.eligibleMembers = activeSavings
-            .filter(savings => savings.status === SavingsStatus.ACTIF && savings.balance > 0)
-            .map(savings => ({
-              id: savings.member?.id || 0,
-              name: savings.member?.name || '',
-              savingsBalance: savings.balance,
-              eligibleAmount: this.calculateEligibleAmount(savings.balance),
-              savings: savings
-            }));
-        },
-        error: (error) => {
-          this.errorMessage = 'Erreur lors du chargement des comptes épargne: ' + error.message;
-        }
-      });
-    } catch (error) {
-      this.errorMessage = 'Une erreur est survenue lors du chargement des données';
-      this.isLoading = false;
-    }
-  }
+    forkJoin({
+      members: this.memberService.getMembersByStatus(AccountStatus.ACTIVE),
+      savings: this.savingsService.getAllSavings()
+    }).subscribe({
+      next: ({ members, savings }) => {
+        // Filtrer uniquement les comptes d'épargne actifs
+        const activeSavings = savings.filter(saving =>
+          saving.status === SavingsStatus.ACTIF
+        );
 
-  // Calculer le montant éligible (par exemple 50% du solde d'épargne)
-  private calculateEligibleAmount(balance: number): number {
-    return balance * 0.5; // 50% du solde d'épargne
-  }
+        // Filtrer les membres qui ont un compte d'épargne actif
+        this.eligibleMembers = members.filter(member => {
+          // Utiliser l'ID du membre imbriqué dans l'objet saving
+          const isEligible = activeSavings.some(saving =>
+            saving.member?.id === member.id
+          );
 
-  registerLoan() {
-    this.newLoan = {
-      interestRate: 0.05,
-      loanDate: new Date(),
-      member: null,
-      amount: 0,
-    };
-    this.showLoanForm = true;
-  }
+          return isEligible;
+        });
 
-  saveLoan() {
-    if (!this.newLoan.member || !this.newLoan.amount) {
-      this.errorMessage = 'Veuillez remplir tous les champs obligatoires';
-      return;
-    }
+        console.log('Membres éligibles finaux:', this.eligibleMembers);
 
-    // Vérifier l'éligibilité
-    const eligibleMember = this.eligibleMembers.find(m => m.id === this.newLoan.member?.id);
-    if (!eligibleMember) {
-      this.errorMessage = 'Ce membre n\'a pas de compte épargne actif';
-      return;
-    }
-
-    // Vérifier le montant du prêt par rapport au solde d'épargne
-    if (this.newLoan.amount > eligibleMember.eligibleAmount) {
-      this.errorMessage = `Le montant demandé dépasse le montant éligible (maximum: ${eligibleMember.eligibleAmount} XAF)`;
-      return;
-    }
-
-    this.isLoading = true;
-    this.loanService.createLoan(this.newLoan).subscribe({
-      next: (loan) => {
-        this.loans.push(loan);
-        this.showLoanForm = false;
-        this.newLoan = { interestRate: 0.05 };
         this.isLoading = false;
-        // Rafraîchir les données
-        this.loadInitialData();
+        this.cdr.detectChanges();
       },
       error: (error) => {
-        this.errorMessage = 'Erreur lors de la création du prêt: ' + error.message;
+        console.error('Erreur lors du chargement des membres éligibles:', error);
+        this.errorMessage = 'Erreur lors du chargement des membres';
         this.isLoading = false;
+        this.cdr.detectChanges();
       }
     });
   }
 
-  recordPayment(loanId: number) {
-    this.selectedLoan = this.loans.find(loan => loan.id === loanId) || null;
-    if (this.selectedLoan) {
-      this.showPaymentForm = true;
-      this.newPayment = {
-        date: new Date(),
-        amount: 0
+
+
+  private loadLoans() {
+    this.isLoading = true;
+    this.loanService.getAllLoans().subscribe({
+      next: (loans) => {
+        this.loans = loans;
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        this.errorMessage = 'Erreur lors du chargement des prêts';
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  createLoan() {
+    if (this.loanForm.valid) {
+      const formValue = this.loanForm.value;
+      const memberId = Number(formValue.memberId);
+
+      if (!this.checkMemberEligibility(memberId)) {
+        this.errorMessage = 'Le membre doit avoir un compte épargne actif pour obtenir un prêt';
+        return;
+      }
+
+      this.isLoading = true;
+
+      // Création de l'objet prêt sans l'objet member complet
+      const loanData = {
+        member: { id: memberId }, // Au lieu de `memberId`
+        amount: formValue.amount,
+        interestRate: formValue.interestRate / 100,
+        dueDate: new Date(formValue.dueDate),
+        remainingAmount: formValue.amount,
+        totalRepayment: this.calculateTotalRepayment(
+          formValue.amount,
+          formValue.interestRate / 100
+        ),
+        status: LoanStatus.IN_PROGRESS,
+        loanDate: new Date()
       };
+
+
+
+      console.log('Données du prêt à envoyer:', loanData);
+
+      this.loanService.createLoan(loanData).subscribe({
+        next: (response) => {
+          console.log('Prêt créé avec succès:', response);
+          this.loadLoans();
+          this.showLoanForm = false;
+          this.loanForm.reset();
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        },
+        error: (error) => {
+          console.error('Erreur lors de la création du prêt:', error);
+          this.errorMessage = 'Erreur lors de la création du prêt';
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        }
+      });
     }
   }
 
-  savePayment() {
-    if (!this.selectedLoan || !this.newPayment.amount) {
-      this.errorMessage = 'Veuillez remplir tous les champs du paiement';
-      return;
-    }
+  // Ajout d'une méthode utilitaire pour vérifier l'éligibilité
+  private checkMemberEligibility(memberId: number): boolean {
+    return this.eligibleMembers.some(member => member.id === memberId);
+  }
 
-    // Vérifier que le paiement ne dépasse pas le montant restant dû
-    const remainingAmount = this.calculateRemainingAmount(this.selectedLoan);
-    if (this.newPayment.amount > remainingAmount) {
-      this.errorMessage = 'Le montant du paiement dépasse le montant restant dû';
-      return;
-    }
+  private calculateTotalRepayment(amount: number, interestRate: number): number {
+    return amount * (1 + interestRate);
+  }
 
-    this.isLoading = true;
-    this.loanService.recordPayment(this.selectedLoan.id, this.newPayment).subscribe({
-      next: (updatedLoan) => {
-        const index = this.loans.findIndex(l => l.id === this.selectedLoan?.id);
-        if (index !== -1) {
-          this.loans[index] = updatedLoan;
+  createReimbursement() {
+    if (this.reimbursementForm.valid && this.selectedLoan) {
+      this.isLoading = true;
+      const reimbursementData: Partial<Reimbursement> = {
+        loanId: this.selectedLoan.id,
+        reimbursementAmount: this.reimbursementForm.get('reimbursementAmount')?.value,
+        reimbursementDate: new Date(this.reimbursementForm.get('reimbursementDate')?.value)
+      };
+
+      this.reimbursementService.createReimbursement(reimbursementData).subscribe({
+        next: () => {
+          this.loadLoans();
+          this.showReimbursementForm = false;
+          this.reimbursementForm.reset();
+          this.selectedLoan = null;
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        },
+        error: (error) => {
+          this.errorMessage = 'Erreur lors de la création du remboursement';
+          this.isLoading = false;
+          this.cdr.detectChanges();
         }
-        this.showPaymentForm = false;
-        this.selectedLoan = null;
-        this.newPayment = {};
-        this.isLoading = false;
-      },
-      error: (error) => {
-        this.errorMessage = 'Erreur lors de l\'enregistrement du paiement: ' + error.message;
-        this.isLoading = false;
-      }
-    });
+      });
+    }
+  }
+
+  selectLoan(loan: Loan) {
+    this.selectedLoan = loan;
+    this.showReimbursementForm = true;
   }
 
   calculateRemainingAmount(loan: Loan): number {
-    const totalPaid = loan.payments?.reduce((sum, payment) => sum + payment.amount, 0) || 0;
-    return loan.totalRepayment - totalPaid;
+    if (!loan.reimbursements) return loan.amount;
+
+    const totalReimbursed = loan.reimbursements.reduce(
+      (sum, reimbursement) => sum + reimbursement.reimbursementAmount,
+      0
+    );
+    return loan.totalRepayment - totalReimbursed;
   }
 
-  generateLoanReport() {
-    this.isLoading = true;
-    this.loanService.generateReport().subscribe({
-      next: (reportData) => {
-        console.log('Rapport généré:', reportData);
-        this.isLoading = false;
-      },
-      error: (error) => {
-        this.errorMessage = 'Erreur lors de la génération du rapport: ' + error.message;
-        this.isLoading = false;
-      }
-    });
+  getDaysUntilDue(dueDate: Date): number {
+    const today = new Date();
+    const due = new Date(dueDate);
+    const diffTime = due.getTime() - today.getTime();
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  }
+
+  getLoanStatusClass(loan: Loan): string {
+    const daysUntilDue = this.getDaysUntilDue(loan.dueDate);
+    if (loan.status === LoanStatus.COMPLETED) return 'bg-success';
+    if (daysUntilDue < 0) return 'bg-danger';
+    if (daysUntilDue < 7) return 'bg-warning';
+    return 'bg-info';
+  }
+
+  closeError() {
+    this.errorMessage = '';
   }
 }
