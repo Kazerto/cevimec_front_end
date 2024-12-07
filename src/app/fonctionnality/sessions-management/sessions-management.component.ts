@@ -22,6 +22,7 @@ export class SessionsManagementComponent implements OnInit {
   currentTab: AccountStatus = AccountStatus.ACTIVE;
   selectedSessionDetails: Session | null = null;
   selectedMembers: number[] = []; // Nouveau tableau pour suivre les membres sélectionnés
+  isLoading = false;
 
 
 
@@ -96,6 +97,7 @@ export class SessionsManagementComponent implements OnInit {
   }
 
   loadSessions(): void {
+    this.isLoading = true;
     this.sessionService.getAllSessions().subscribe({
       next: (data) => {
         this.sessions = data;
@@ -110,15 +112,26 @@ export class SessionsManagementComponent implements OnInit {
 
   onCreateSession(): void {
     if (this.sessionForm.valid) {
+      this.isLoading = true;
       const memberIds = this.sessionForm.get('members')?.value || [];
+
+      const validMemberIds = memberIds.filter((id: number) => {
+        return id && id !== 0 && Number.isInteger(id) && this.members.some(member => member.id === id);
+      });
+
+      // Vérifier qu'il y a au moins un membre valide
+      if (validMemberIds.length === 0) {
+        console.error('Aucun membre valide sélectionné');
+        // Optionnellement, ajouter un toast/notification pour l'utilisateur
+        this.isLoading = false;
+        return;
+      }
 
       const sessionData = {
         ...this.sessionForm.value,
         date: new Date(this.sessionForm.get('date')?.value).toISOString().split('T')[0],
-        members: memberIds.map((id: number) => ({ id }))  // Assurez-vous que c'est dans le bon format
+        members: validMemberIds.map((id: number) => ({ member: { id } }))
       };
-
-      console.log('Session data to send:', sessionData);
 
       this.sessionService.createSession(sessionData).subscribe({
         next: (session) => {
@@ -129,6 +142,10 @@ export class SessionsManagementComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error creating session:', error);
+          // Ajouter une notification d'erreur
+        },
+        complete: () => {
+          this.isLoading = false;
         }
       });
     }
@@ -146,6 +163,10 @@ export class SessionsManagementComponent implements OnInit {
     const membersControl = this.sessionForm.get('members');
     const currentSelection = [...(membersControl?.value || [])];
 
+    // Vérifier si le membre existe réellement
+    const memberExists = this.members.some(member => member.id === memberId);
+    if (!memberExists) return;
+
     const index = currentSelection.indexOf(memberId);
     if (index === -1) {
       currentSelection.push(memberId);
@@ -159,16 +180,15 @@ export class SessionsManagementComponent implements OnInit {
 
   onUpdateSession(): void {
     if (this.sessionForm.valid && this.selectedSession?.id) {
+      this.isLoading = true;
       const memberIds = this.sessionForm.get('members')?.value || [];
-      const members = memberIds.map((id: number) => ({ id }));
+      const members = memberIds.map((id: number) => ({ member: { id } }));
 
       const sessionData = {
         ...this.sessionForm.value,
         members,
         date: new Date(this.sessionForm.get('date')?.value).toISOString().split('T')[0]
       };
-
-      delete sessionData.membersPresent;
 
       this.sessionService.updateSession(this.selectedSession.id, sessionData).subscribe({
         next: (updatedSession) => {
@@ -183,6 +203,9 @@ export class SessionsManagementComponent implements OnInit {
         },
         error: (error) => {
           console.error('Erreur lors de la mise à jour de la session:', error);
+        },
+        complete: () => {
+          this.isLoading = false;
         }
       });
     }

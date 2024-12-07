@@ -62,7 +62,11 @@
 
           <div class="col-md-6 mb-3">
             <label class="form-label">Type de Session</label>
-            <input type="text" class="form-control" formControlName="sessionType">
+            <select class="form-control" formControlName="sessionType">
+              <option value="">Sélectionner un type</option>
+              <option value="ORDINAIRE">ORDINAIRE</option>
+              <option value="EXTRAORDINAIRE">EXTRAORDINAIRE</option>
+            </select>
           </div>
         </div>
         <div class="mb-3">
@@ -234,6 +238,23 @@
               <div class="col-md-6 mb-3">
                 <label class="form-label">Total Dépenses</label>
                 <input type="number" class="form-control" formControlName="expensesTotal">
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Membres</label>
+              <div class="member-selection border rounded p-3">
+                <div class="custom-control custom-checkbox mb-2" *ngFor="let member of members">
+                  <input
+                    type="checkbox"
+                    class="custom-control-input"
+                    [id]="'member-edit-' + member.id"
+                    [checked]="isSelected(member.id)"
+                    (change)="toggleMember(member.id)"
+                  >
+                  <label class="custom-control-label" [for]="'member-edit-' + member.id">
+                    {{ member.firstName }} {{ member.lastName }}
+                  </label>
+                </div>
               </div>
             </div>
             <div class="text-end">

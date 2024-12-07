@@ -1,83 +1,42 @@
-<div class="container mt-4">
-  <!-- Formulaire pour ouvrir une nouvelle tontine -->
-  <div class="card mb-4">
-    <div class="card-header">
-      Ouvrir une nouvelle tontine
-    </div>
-    <div class="card-body">
-      <form (ngSubmit)="ouvrirTontine()">
-        <div class="mb-3">
-          <label for="nom" class="form-label">Nom de la tontine</label>
-          <input type="text" class="form-control" id="nom" [(ngModel)]="nouvelleTontine.nom" name="nom" required>
-        </div>
-        <div class="mb-3">
-          <label for="dateDebut" class="form-label">Date de début</label>
-          <input type="date" class="form-control" id="dateDebut" [(ngModel)]="nouvelleTontine.dateDebut" name="dateDebut" required>
-        </div>
-        <div class="mb-3">
-          <label for="montantCotisation" class="form-label">Montant de la cotisation</label>
-          <input type="number" class="form-control" id="montantCotisation" [(ngModel)]="nouvelleTontine.montantCotisation" name="montantCotisation" required>
-        </div>
-        <div class="mb-3">
-          <label for="frequence" class="form-label">Fréquence</label>
-          <select class="form-select" id="frequence" [(ngModel)]="nouvelleTontine.frequence" name="frequence" required>
-            <option value="">Choisir une fréquence</option>
-            <option *ngFor="let freq of frequences" [value]="freq">{{freq}}</option>
-          </select>
-        </div>
-        <button type="submit" class="btn btn-primary">Ouvrir la tontine</button>
-      </form>
-    </div>
-  </div>
-
-  <!-- Liste des tontines -->
-  <div class="card mb-4">
-    <div class="card-header">
-      Liste des tontines
-    </div>
-    <div class="card-body">
-      <ul class="list-group">
-        <li *ngFor="let tontine of tontines" class="list-group-item list-group-item-action"
-            (click)="selectionnerTontine(tontine)"
-            [class.active]="tontine === tontineSelectionnee">
-          {{ tontine.nom }} - Début: {{ tontine.dateDebut | date:'dd/MM/yyyy' }} - Cotisation: {{ tontine.montantCotisation | currency:'XAF':'symbol':'1.0-0' }}
-        </li>
-      </ul>
-    </div>
-  </div>
-
-  <!-- Détails de la tontine sélectionnée -->
-  <div *ngIf="tontineSelectionnee" class="card mb-4">
-    <div class="card-header">
-      Détails de la tontine: {{ tontineSelectionnee.nom }}
-    </div>
-    <div class="card-body">
-      <h5>Informations générales</h5>
-      <p>Date de début: {{ tontineSelectionnee.dateDebut | date:'dd/MM/yyyy' }}</p>
-      <p>Montant de la cotisation: {{ tontineSelectionnee.montantCotisation | currency:'XAF':'symbol':'1.0-0' }}</p>
-      <p>Fréquence: {{ tontineSelectionnee.frequence }}</p>
-
-      <h5 class="mt-4">Membres et ordre de réception</h5>
-      <ul cdkDropList (cdkDropListDropped)="onDrop($event)" class="list-group">
-        <li *ngFor="let membre of tontineSelectionnee.membres" cdkDrag class="list-group-item">
-          {{ membre.ordreReception }}. {{ membre.nom }}
-        </li>
-      </ul>
-
-      <div class="mt-3">
-        <button class="btn btn-secondary me-2" (click)="definirOrdreAleatoire()">Définir ordre aléatoire</button>
-        <button class="btn btn-info" (click)="genererRapport()">Générer rapport</button>
-      </div>
-
-      <h5 class="mt-4">Ajouter un nouveau membre</h5>
-      <form (ngSubmit)="ajouterMembre()" class="row g-3">
-        <div class="col-auto">
-          <input type="text" class="form-control" [(ngModel)]="nouveauMembre.nom" name="nomMembre" placeholder="Nom du membre" required>
-        </div>
-        <div class="col-auto">
-          <button type="submit" class="btn btn-primary">Ajouter</button>
-        </div>
-      </form>
-    </div>
-  </div>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Page en Développement</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #f4f6f9;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      font-family: 'Arial', sans-serif;
+    }
+    .dev-container {
+      text-align: center;
+      background-color: white;
+      padding: 3rem;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+    .emoji {
+      font-size: 5rem;
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+<body>
+<div class="dev-container">
+  <div class="emoji">🚧</div>
+  <h1 class="mb-4">Page en Construction</h1>
+  <p class="lead text-muted">
+    Nous travaillons actuellement sur cette fonctionnalité passionnante.
+    Revenez bientôt pour découvrir les nouveautés !
+  </p>
+  <p class="text-muted small mt-3">
+    Développement en cours... Patience et créativité 🌟
+  </p>
 </div>
+</body>
+</html>

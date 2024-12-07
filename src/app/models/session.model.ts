@@ -6,6 +6,7 @@ export interface Session {
   agenda: string;
   sessionType: string;
   members: Member[];  // Changé de membersPresent: number[]
+  memberId?: number;
   smallTontineTotal: number;
   sanctionTotal: number;
   bigTontineTotal: number;
